@@ -1,0 +1,6 @@
+[package]
+name = "ownership"
+type = "bin"
+authors = [""]
+
+[dependencies]

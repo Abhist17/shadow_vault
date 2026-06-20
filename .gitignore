@@ -1,0 +1,7 @@
+target/
+node_modules/
+.vercel/
+.next/
+dist/
+.DS_Store
+.env
