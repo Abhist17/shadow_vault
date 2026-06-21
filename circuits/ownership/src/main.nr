@@ -1,12 +1,7 @@
-fn main(
-    secret: Field,
-    amount: Field,
-    commitment: pub Field,
-) {
-    assert(secret + amount == commitment);
+use dep::poseidon::poseidon2::Poseidon2;
+
+fn main(secret: Field, commitment: pub Field) {
+    let computed_hash = Poseidon2::hash([secret], 1);
+    assert(computed_hash == commitment);
 }
 
-#[test]
-fn test_main() {
-    main(100, 50, 150);
-}

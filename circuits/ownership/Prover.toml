@@ -1,3 +1,2 @@
-secret = "100"
-amount = "50"
-commitment = "150"
+secret = "123"
+commitment = "0"
