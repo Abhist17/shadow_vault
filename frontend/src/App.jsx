@@ -1,168 +1,78 @@
-import Hero from "./components/Hero";
-import DepositCard from "./components/DepositCard";
-import ProofCard from "./components/ProofCard";
-import StatusTimeline from "./components/StatusTimeline";
-import WithdrawCard from "./components/WithdrawCard";
-import Footer from "./components/Footer";
+import Navbar from "./components/layout/Navbar";
+
+import Hero from "./components/home/Hero";
+import Features from "./components/home/Features";
+import Architecture from "./components/home/Architecture";
+
+import Deposit from "./components/vault/Deposit";
+import Commitment from "./components/vault/Commitment";
+import Proof from "./components/vault/Proof";
+import Verification from "./components/vault/Verification";
+import Withdraw from "./components/vault/Withdraw";
+import Timeline from "./components/vault/Timeline";
+
+import Footer from "./components/layout/Footer";
 
 export default function App() {
   return (
     <main
       style={{
         background: "#050505",
-        color: "white",
+        color: "#fff",
+        minHeight: "100vh",
       }}
     >
-      {/* Hero */}
-      <section
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          textAlign: "center",
-          position: "relative",
-          padding: "0 20px",
-        }}
-      >
-        <div className="glow" />
+      <Navbar />
 
-        <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <ShieldCheck size={72} strokeWidth={1.3} />
+      <Hero />
 
-          <h1 className="title" style={{ marginTop: 20 }}>
-            ShadowVault
-          </h1>
-
-          <p
-            className="subtitle"
-            style={{
-              maxWidth: 700,
-              margin: "30px auto",
-            }}
-          >
-            Privacy-preserving treasury ownership powered by Noir,
-            Ultrahonk and Stellar.
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 18,
-              justifyContent: "center",
-              marginTop: 45,
-              flexWrap: "wrap",
-            }}
-          >
-            <button className="btn-primary">
-              Launch Vault
-            </button>
-
-            <button className="btn-secondary">
-              View Architecture
-            </button>
-          </div>
-
-          <div
-            style={{
-              marginTop: 90,
-              color: "#777",
-            }}
-          >
-            <ChevronDown size={32} />
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Features */}
+      <Features />
 
       <section
-        className="section"
         style={{
-          paddingBottom: 120,
+          maxWidth: "1400px",
+          margin: "80px auto",
+          padding: "0 30px",
         }}
       >
         <h2
           style={{
+            fontSize: "42px",
+            marginBottom: "40px",
             textAlign: "center",
-            fontSize: 42,
-            marginBottom: 50,
           }}
         >
-          Why ShadowVault?
+          ShadowVault Dashboard
         </h2>
 
         <div
-          className="grid"
           style={{
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(260px,1fr))",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(450px,1fr))",
+            gap: "30px",
           }}
         >
-          <Feature
-            icon={<LockKeyhole size={40} />}
-            title="Private Ownership"
-            text="Ownership is proven with Zero Knowledge instead of revealing identities."
-          />
+          <Deposit />
+          <Commitment />
 
-          <Feature
-            icon={<ShieldCheck size={40} />}
-            title="Verified On Stellar"
-            text="Proofs are verified on-chain using Soroban smart contracts."
-          />
+          <Proof />
+          <Verification />
+        </div>
 
-          <Feature
-            icon={<Wallet size={40} />}
-            title="Replay Protection"
-            text="Nullifiers permanently prevent double withdrawals."
-          />
+        <div
+          style={{
+            marginTop: "30px",
+          }}
+        >
+          <Withdraw />
         </div>
       </section>
+
+      <Timeline />
+
+      <Architecture />
+
+      <Footer />
     </main>
-  );
-}
-
-function Feature({ icon, title, text }) {
-  return (
-    <motion.div
-      whileHover={{
-        y: -8,
-      }}
-      className="card"
-      style={{
-        padding: 30,
-      }}
-    >
-      <div
-        style={{
-          marginBottom: 20,
-        }}
-      >
-        {icon}
-      </div>
-
-      <h3
-        style={{
-          marginBottom: 12,
-          fontSize: 24,
-        }}
-      >
-        {title}
-      </h3>
-
-      <p
-        style={{
-          color: "#9a9a9a",
-          lineHeight: 1.8,
-        }}
-      >
-        {text}
-      </p>
-    </motion.div>
   );
 }

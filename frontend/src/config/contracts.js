@@ -1,0 +1,11 @@
+export const VAULT_ID =
+"CCVJUSBD7S4WW4GKS2QXWKQYT4FR4NFXU56VIGJ733X4IKM566N3JOEW";
+
+export const VERIFIER_ID =
+"CAJ4UQK2R6WNQXCINZFDH47FM2R7DK2BYQVATKG5RQ7KBRJK2LRS2GCU";
+
+export const RPC =
+"http://localhost:8000/soroban/rpc";
+
+export const PASSPHRASE =
+"Standalone Network ; February 2017";
