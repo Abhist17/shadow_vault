@@ -2,7 +2,7 @@
 
 > Privacy-preserving vault on Stellar, powered by Zero Knowledge Proofs.
 
-ShadowVault is a privacy-focused vault built on **Stellar Soroban** that lets users securely deposit assets as cryptographic commitments and later prove ownership using **Zero Knowledge Proofs** — without ever revealing their identity, balance, or secret.
+ShadowVault is a privacy-focused vault built on **Stellar Soroban** that lets users securely deposit assets as cryptographic commitments and later prove ownership using **Zero Knowledge Proofs** without ever revealing their identity, balance, or secret.
 
 Instead of storing sensitive financial information on-chain, ShadowVault stores only a **Poseidon commitment**, enabling private ownership with publicly verifiable correctness.
 
@@ -17,7 +17,7 @@ Traditional blockchains are transparent by design. Anyone can see:
 - Full transaction history
 - Treasury movements
 
-Transparency builds trust, but it also leaks sensitive financial data — a dealbreaker for individuals, DAOs, and institutions that need confidentiality.
+Transparency builds trust, but it also leaks sensitive financial data a dealbreaker for individuals, DAOs, and institutions that need confidentiality.
 
 ## The Solution
 
@@ -173,10 +173,5 @@ shadow_vault/
 
 ## Why ShadowVault?
 
-ShadowVault combines the privacy guarantees of Zero Knowledge Proofs with the security and speed of Stellar. Instead of exposing financial information publicly, users prove ownership cryptographically — making blockchain applications viable for individuals, DAOs, and institutions that require confidentiality without sacrificing verifiability.
+ShadowVault combines the privacy guarantees of Zero Knowledge Proofs with the security and speed of Stellar. Instead of exposing financial information publicly, users prove ownership cryptographically making blockchain applications viable for individuals, DAOs, and institutions that require confidentiality without sacrificing verifiability.
 
----
-
-## Built With
-
-Stellar, Soroban, Rust, Noir, UltraHonk, React, Express, Vite
