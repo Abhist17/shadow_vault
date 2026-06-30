@@ -1,10 +1,43 @@
 import { useState } from "react";
 import { Lock, Hash, Wallet } from "lucide-react";
+import { generateCommitment } from "../../api/vault";
 
 export default function Deposit() {
   const [secret, setSecret] = useState("123");
   const [depositId, setDepositId] = useState("999");
   const [amount, setAmount] = useState("1000");
+
+  const [loading, setLoading] = useState(false);
+
+  async function handleGenerateCommitment() {
+    setLoading(true);
+
+    try {
+      const result = await generateCommitment({
+        secret,
+        depositId,
+        amount,
+      });
+
+      console.log(result);
+
+      localStorage.setItem(
+        "commitment",
+        result.commitment
+      );
+
+      window.dispatchEvent(
+        new Event("commitment")
+      );
+
+      alert("Commitment Generated Successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Backend Error");
+    }
+
+    setLoading(false);
+  }
 
   return (
     <div
@@ -69,10 +102,16 @@ export default function Deposit() {
 
       <div style={{ height: 30 }} />
 
-      <button style={button}>
+      <button
+        style={button}
+        onClick={handleGenerateCommitment}
+        disabled={loading}
+      >
         <Hash size={18} />
 
-        Generate Commitment
+        {loading
+          ? "Generating..."
+          : "Generate Commitment"}
       </button>
 
       <div style={{ height: 20 }} />
@@ -81,6 +120,7 @@ export default function Deposit() {
         style={{
           ...button,
           background: "#222",
+          color: "white",
         }}
       >
         <Wallet size={18} />
