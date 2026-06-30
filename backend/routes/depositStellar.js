@@ -3,51 +3,47 @@ const { exec } = require("child_process");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const { commitment, amount } = req.body;
+const CONTRACT_ID = process.env.CONTRACT_ID;
+const NETWORK = process.env.NETWORK;
+const SOURCE = process.env.SOURCE_ACCOUNT;
 
-    if (!commitment || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: "commitment and amount are required",
-      });
-    }
+router.post("/", (req, res) => {
+  const { depositId, commitment, amount } = req.body;
 
-    const command = `
+  if (!depositId || !commitment || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: "depositId, commitment and amount are required",
+    });
+  }
+
+const command = `
 stellar contract invoke \
---id YOUR_VAULT_CONTRACT_ID \
---source alice \
---network testnet \
+--id ${CONTRACT_ID} \
+--source ${SOURCE} \
+--network ${NETWORK} \
 -- deposit \
+--deposit-id ${depositId} \
 --commitment ${commitment} \
 --amount ${amount}
 `;
 
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(stderr);
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(stderr);
 
-        return res.status(500).json({
-          success: false,
-          error: stderr || error.message,
-        });
-      }
-
-      return res.json({
-        success: true,
-        message: "Deposit successful!",
-        transaction: stdout.trim(),
+      return res.status(500).json({
+        success: false,
+        error: stderr || error.message,
       });
-    });
-  } catch (err) {
-    console.error(err);
+    }
 
-    res.status(500).json({
-      success: false,
-      error: err.message,
+    return res.json({
+      success: true,
+      message: "Deposit successful!",
+      result: stdout.trim(),
     });
-  }
+  });
 });
 
 module.exports = router;

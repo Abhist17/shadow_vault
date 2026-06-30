@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Lock, Hash, Wallet } from "lucide-react";
-import { generateCommitment } from "../../api/vault";
+import {
+  generateCommitment,
+  depositToStellar,
+} from "../../api/vault";
 
 export default function Deposit() {
   const [secret, setSecret] = useState("123");
@@ -34,6 +37,43 @@ export default function Deposit() {
     } catch (err) {
       console.error(err);
       alert("Backend Error");
+    }
+
+    setLoading(false);
+  }
+
+  async function handleDeposit() {
+    const commitment = localStorage.getItem("commitment");
+
+    if (!commitment) {
+      alert("Generate Commitment first!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await depositToStellar({
+        depositId,
+        commitment,
+        amount,
+      });
+
+      console.log(result);
+
+      localStorage.setItem(
+        "depositStatus",
+        "completed"
+      );
+
+      window.dispatchEvent(
+        new Event("deposit")
+      );
+
+      alert("Deposit Successful!");
+    } catch (err) {
+      console.error(err);
+      alert("Deposit Failed!");
     }
 
     setLoading(false);
@@ -122,10 +162,14 @@ export default function Deposit() {
           background: "#222",
           color: "white",
         }}
+        onClick={handleDeposit}
+        disabled={loading}
       >
         <Wallet size={18} />
 
-        Deposit to Stellar
+        {loading
+          ? "Depositing..."
+          : "Deposit to Stellar"}
       </button>
     </div>
   );

@@ -1,15 +1,16 @@
 const express = require("express");
+require("dotenv").config();
 const cors = require("cors");
 const depositStellarRoute = require("./routes/depositStellar");
 const depositRoute = require("./routes/deposit");
-
+require("dotenv").config();
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/deposit", depositRoute);
-app.use("/deposit-stellar", depositStellarRoute);
+app.use("/deposit-stellar", depositStellarRoute); 
 
 app.get("/", (req, res) => {
     res.json({
