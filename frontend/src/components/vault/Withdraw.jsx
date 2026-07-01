@@ -18,7 +18,7 @@ export default function Withdraw() {
       const result = await withdraw({
         depositId,
         nullifier:
-          "0000000000000000000000000000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000002",
       });
 
       console.log(result);

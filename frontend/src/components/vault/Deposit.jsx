@@ -61,10 +61,8 @@ export default function Deposit() {
 
       console.log(result);
 
-      localStorage.setItem(
-        "depositStatus",
-        "completed"
-      );
+      localStorage.setItem("depositStatus", "completed");
+localStorage.setItem("depositId", depositId);
 
       window.dispatchEvent(
         new Event("deposit")

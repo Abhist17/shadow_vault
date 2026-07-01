@@ -1,58 +1,52 @@
 const express = require("express");
-const { spawn } = require("child_process");
+const { exec } = require("child_process");
 const path = require("path");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  const cwd = path.resolve(
-    __dirname,
-    "../../circuits/ownership_vault"
-  );
+router.post("/", (req, res) => {
 
-  const run = (cmd, args) =>
-    new Promise((resolve, reject) => {
-      const p = spawn(cmd, args, { cwd });
+    const circuitDir = path.join(
+        __dirname,
+        "../../circuits/ownership_vault"
+    );
 
-      let err = "";
+    const command = `
+cd "${circuitDir}" &&
+pwd &&
+ls target &&
+nargo execute &&
+/home/abhi/.bb/bin/bb prove \
+-b target/ownership_vault.json \
+-w target/ownership_vault.gz \
+-o target/proof
+`;
 
-      p.stderr.on("data", d => err += d.toString());
+    console.log(command);
 
-      p.on("close", code => {
-        if (code === 0) resolve();
-        else reject(err);
-      });
+    exec(command, { maxBuffer: 1024 * 1024 * 20 }, (error, stdout, stderr) => {
+
+        console.log("STDOUT:");
+        console.log(stdout);
+
+        console.log("STDERR:");
+        console.log(stderr);
+
+        if (error) {
+
+            return res.status(500).json({
+                success:false,
+                error:error.message
+            });
+
+        }
+
+        res.json({
+            success:true
+        });
+
     });
 
-  try {
-
-    await run("nargo", ["execute"]);
-
-    await run("bb", [
-      "prove",
-      "-b",
-      "target/ownership_vault.json",
-      "-w",
-      "target/ownership_vault.gz",
-      "-o",
-      "target/proof",
-    ]);
-
-    res.json({
-      success: true,
-      message: "Proof Generated Successfully",
-    });
-
-  } catch (e) {
-
-    console.error(e);
-
-    res.status(500).json({
-      success: false,
-      error: e.toString(),
-    });
-
-  }
 });
 
 module.exports = router;
