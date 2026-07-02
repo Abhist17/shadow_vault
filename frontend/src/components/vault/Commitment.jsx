@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
-import { Copy } from "lucide-react";
+import {
+  Copy,
+  ShieldCheck,
+  CheckCircle2,
+} from "lucide-react";
 
 export default function Commitment() {
-
   const [commitment, setCommitment] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-
     const update = () => {
-
-      setCommitment(
-        localStorage.getItem("commitment") || ""
-      );
-
+      setCommitment(localStorage.getItem("commitment") || "");
     };
 
     update();
@@ -24,57 +23,149 @@ export default function Commitment() {
         "commitment",
         update
       );
-
   }, []);
 
+  function handleCopy() {
+    navigator.clipboard.writeText(commitment);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  }
+
   return (
-
-    <div
-      style={{
-        background:"#101010",
-        border:"1px solid #222",
-        borderRadius:18,
-        padding:30
-      }}
-    >
-
-      <h2>Commitment</h2>
+    <div className="card">
 
       <div
         style={{
-          marginTop:20,
-          background:"#181818",
-          padding:20,
-          borderRadius:12,
-          wordBreak:"break-all"
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 30,
+        }}
+      >
+        <div>
+
+          <p
+            style={{
+              color: "#D4AF37",
+              fontWeight: 700,
+              marginBottom: 8,
+            }}
+          >
+            STEP 02
+          </p>
+
+          <h2 style={{ margin: 0 }}>
+            Commitment
+          </h2>
+
+        </div>
+
+        <div
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: "50%",
+            background: "rgba(212,175,55,.08)",
+            display: "grid",
+            placeItems: "center",
+            color: "#D4AF37",
+          }}
+        >
+          <ShieldCheck size={28} />
+        </div>
+      </div>
+
+      <p
+        style={{
+          color: "#999",
+          marginBottom: 18,
+        }}
+      >
+        Generated Poseidon commitment
+      </p>
+
+      <div
+        style={{
+          background: "#0c0c0c",
+          border: "1px solid rgba(212,175,55,.15)",
+          borderRadius: 18,
+          padding: 20,
+          minHeight: 150,
+          wordBreak: "break-all",
+          color: "#D4AF37",
+          fontFamily: "monospace",
+          fontSize: 14,
+          lineHeight: 1.8,
         }}
       >
         {commitment || "No commitment generated yet"}
       </div>
 
       <button
+        className="btn-primary"
         style={{
-          marginTop:20,
-          width:"100%",
-          padding:16,
-          borderRadius:12,
-          border:0,
-          cursor:"pointer"
+          width: "100%",
+          marginTop: 22,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 12,
         }}
-        onClick={()=>{
-          navigator.clipboard.writeText(commitment);
-          alert("Copied!");
-        }}
+        disabled={!commitment}
+        onClick={handleCopy}
       >
-
-        <Copy size={18}/>
-
-        Copy Commitment
-
+        {copied ? (
+          <>
+            <CheckCircle2 size={18} />
+            Copied
+          </>
+        ) : (
+          <>
+            <Copy size={18} />
+            Copy Commitment
+          </>
+        )}
       </button>
 
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: 28,
+          borderTop: "1px solid rgba(255,255,255,.05)",
+          paddingTop: 20,
+        }}
+      >
+        <div>
+
+          <p
+            style={{
+              margin: 0,
+              color: "#888",
+              fontSize: 13,
+            }}
+          >
+            Storage
+          </p>
+
+          <strong>Browser LocalStorage</strong>
+
+        </div>
+
+        <div
+          style={{
+            color: "#D4AF37",
+            fontWeight: 700,
+          }}
+        >
+          SHA-256
+        </div>
+
+      </div>
+
     </div>
-
   );
-
 }

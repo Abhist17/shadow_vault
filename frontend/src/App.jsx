@@ -28,51 +28,84 @@ export default function App() {
 
       <Features />
 
+      {/* DASHBOARD */}
+
       <section
+        id="dashboard"
         style={{
-          maxWidth: "1400px",
-          margin: "80px auto",
-          padding: "0 30px",
+          maxWidth: 1450,
+          margin: "auto",
+          padding: "100px 35px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "42px",
-            marginBottom: "40px",
-            textAlign: "center",
-          }}
-        >
-          ShadowVault Dashboard
-        </h2>
-
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(450px,1fr))",
-            gap: "30px",
+            textAlign: "center",
+            marginBottom: 60,
           }}
         >
-          <Deposit />
-          <Commitment />
+          <p
+            style={{
+              color: "#D4AF37",
+              letterSpacing: 2,
+              fontWeight: 700,
+            }}
+          >
+            VAULT CONTROL PANEL
+          </p>
 
-          <Proof />
-          <Verification />
+          <h2
+            style={{
+              fontSize: 52,
+              marginTop: 15,
+            }}
+          >
+            ShadowVault Dashboard
+          </h2>
+
+          <p
+            style={{
+              color: "#999",
+              maxWidth: 700,
+              margin: "20px auto",
+              lineHeight: 1.8,
+            }}
+          >
+            Generate commitments, deposit assets,
+            create zero-knowledge proofs,
+            verify ownership and securely withdraw
+            using Stellar smart contracts.
+          </p>
         </div>
 
         <div
           style={{
-            marginTop: "30px",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(420px,1fr))",
+            gap: 30,
           }}
         >
+          <Deposit />
+
+          <Commitment />
+
+          <Proof />
+
+          <Verification />
+
           <Withdraw />
         </div>
       </section>
 
       <Timeline />
 
-      <Architecture />
+      <div id="architecture">
+        <Architecture />
+      </div>
 
-      <Footer />
+      <div id="footer">
+        <Footer />
+      </div>
     </main>
   );
 }
