@@ -168,7 +168,7 @@ export default function Proof() {
         {generated ? (
           <>
             <CheckCircle2 size={18} />
-            Proof Generated
+            Generate Proof
           </>
         ) : (
           <>

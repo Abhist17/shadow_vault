@@ -84,7 +84,7 @@ export default function Commitment() {
           marginBottom: 18,
         }}
       >
-        Generated Poseidon commitment
+      
       </p>
 
       <div
@@ -141,17 +141,7 @@ export default function Commitment() {
       >
         <div>
 
-          <p
-            style={{
-              margin: 0,
-              color: "#888",
-              fontSize: 13,
-            }}
-          >
-            Storage
-          </p>
-
-          <strong>Browser LocalStorage</strong>
+          
 
         </div>
 

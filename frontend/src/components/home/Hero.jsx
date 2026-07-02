@@ -68,7 +68,7 @@ export default function Hero() {
               fontWeight: 900,
             }}
           >
-            Privacy.
+            Privacy
 
             <br />
 
@@ -77,7 +77,7 @@ export default function Hero() {
                 color: "#D4AF37",
               }}
             >
-              Verified.
+              Verified
             </span>
 
             <br />

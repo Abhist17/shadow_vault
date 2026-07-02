@@ -16,32 +16,30 @@ export default function Withdraw() {
   );
 
   async function handleWithdraw() {
-    const depositId = Number(
-      localStorage.getItem("depositId")
-    );
+  const depositId = Number(
+    localStorage.getItem("depositId")
+  );
 
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      await withdraw({
-        depositId,
-        nullifier:
-          "0000000000000000000000000000000000000000000000000000000000000002",
-      });
+    await withdraw({
+      depositId,
+    });
 
-      localStorage.setItem("withdrawn", "true");
+    localStorage.setItem("withdrawn", "true");
 
-      setCompleted(true);
+    setCompleted(true);
 
-      alert("Funds Withdrawn Successfully!");
+    alert("Funds Withdrawn Successfully!");
 
-    } catch (err) {
-      console.error(err);
-      alert("Withdrawal Failed!");
-    }
-
-    setLoading(false);
+  } catch (err) {
+    console.error(err);
+    alert("Withdrawal Failed!");
   }
+
+  setLoading(false);
+}
 
   return (
     <div className="card">
@@ -151,7 +149,7 @@ export default function Withdraw() {
           <>
             <CheckCircle2 size={18} />
 
-            Withdrawal Complete
+            Withdraw
           </>
         ) : (
           <>

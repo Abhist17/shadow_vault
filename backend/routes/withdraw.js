@@ -1,11 +1,15 @@
 const express = require("express");
 const { exec } = require("child_process");
+const crypto = require("crypto");
 
 const router = express.Router();
 
 router.post("/", (req, res) => {
 
-    const { depositId, nullifier } = req.body;
+    const { depositId } = req.body;
+
+    // Generate a new random 32-byte nullifier
+    const nullifier = crypto.randomBytes(32).toString("hex");
 
     const command = `
 stellar contract invoke \
@@ -30,9 +34,10 @@ stellar contract invoke \
             });
         }
 
-        res.json({
+        return res.json({
             success: true,
             message: "Withdrawal Successful!",
+            nullifier,
             result: stdout.trim(),
         });
 

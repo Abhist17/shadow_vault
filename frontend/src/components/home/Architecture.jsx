@@ -3,7 +3,7 @@ export default function Architecture(){
 const flow=[
 "User",
 "Secret",
-"Poseidon",
+
 "Commitment",
 "Vault",
 "Noir",

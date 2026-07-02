@@ -136,7 +136,7 @@ export default function Verification() {
         {verified ? (
           <>
             <CheckCircle2 size={18} />
-            Verified
+            Verify
           </>
         ) : (
           <>
