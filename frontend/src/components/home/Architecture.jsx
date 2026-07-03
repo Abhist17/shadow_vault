@@ -1,80 +1,69 @@
-export default function Architecture(){
+import architecture from "../../assets/zk_deposit_system_architecture (1).svg";
 
-const flow=[
-"User",
-"Secret",
+export default function Architecture() {
+  return (
+    <section
+      id="architecture"
+      style={{
+        maxWidth: 1500,
+        margin: "120px auto",
+        padding: "0 30px",
+        textAlign: "center",
+      }}
+    >
+      <p
+        style={{
+          color: "#D4AF37",
+          fontWeight: 700,
+          letterSpacing: 2,
+          marginBottom: 12,
+        }}
+      >
+        SYSTEM ARCHITECTURE
+      </p>
 
-"Commitment",
-"Vault",
-"Noir",
-"UltraHonk",
-"Stellar",
-"Withdraw"
-]
+      <h2
+        style={{
+          fontSize: 52,
+          marginBottom: 20,
+        }}
+      >
+        ShadowVault Architecture
+      </h2>
 
-return(
+      <p
+        style={{
+          maxWidth: 850,
+          margin: "0 auto 50px",
+          color: "#999",
+          lineHeight: 1.8,
+          fontSize: 18,
+        }}
+      >
+        End-to-end privacy workflow using Poseidon commitments,
+        Noir circuits, UltraHonk proof generation and Soroban smart
+        contracts on Stellar.
+      </p>
 
-<section
-id="architecture"
-style={{
-padding:"120px 80px"
-}}
->
-
-<h2
-style={{
-fontSize:52,
-textAlign:"center",
-marginBottom:70
-}}
->
-Architecture
-</h2>
-
-<div
-style={{
-display:"flex",
-justifyContent:"center",
-alignItems:"center",
-gap:18,
-flexWrap:"wrap"
-}}
->
-
-{
-flow.map((x,i)=>(
-<>
-<div
-style={{
-padding:"16px 30px",
-borderRadius:12,
-background:"#111",
-border:"1px solid #333"
-}}
->
-{x}
-</div>
-
-{i!==flow.length-1 &&
-
-<div
-style={{
-fontSize:28
-}}
->
-→
-</div>
-
-}
-
-</>
-))
-}
-
-</div>
-
-</section>
-
-)
-
+      <div
+        style={{
+          background: "#0F0F0F",
+          border: "1px solid rgba(212,175,55,.12)",
+          borderRadius: 24,
+          padding: 30,
+        }}
+      >
+        <img
+          src={architecture}
+          alt="ShadowVault Architecture"
+          style={{
+            width: "100%",
+            maxWidth: 1300,
+            display: "block",
+            margin: "0 auto",
+          }}
+        />
+      </div>
+    </section>
+  );
 }

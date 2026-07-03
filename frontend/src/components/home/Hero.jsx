@@ -106,32 +106,28 @@ export default function Hero() {
               marginTop: 45,
             }}
           >
-            <button
-              className="btn-primary"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "18px 30px",
-              }}
-            >
-              Launch Vault
-
-              <ArrowRight size={18} />
-            </button>
+            
 
             <button
-              style={{
-                padding: "18px 30px",
-                background: "transparent",
-                color: "white",
-                border: "1px solid #2a2a2a",
-                borderRadius: 14,
-                fontWeight: 600,
-              }}
-            >
-              GitHub
-            </button>
+  onClick={() =>
+    window.open(
+      "https://github.com/Abhist17/shadow_vault",
+      "_blank",
+      "noopener,noreferrer"
+    )
+  }
+  style={{
+    padding: "16px 26px",
+    background: "transparent",
+    color: "white",
+    border: "1px solid #333",
+    borderRadius: 14,
+    cursor: "pointer",
+    fontWeight: 600,
+  }}
+>
+  GitHub
+</button>
           </div>
 
           <div

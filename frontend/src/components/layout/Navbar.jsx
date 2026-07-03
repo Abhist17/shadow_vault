@@ -1,80 +1,107 @@
-import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 
 export default function Navbar() {
+  const scrollTo = (id) => {
+    const section = document.getElementById(id);
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
-    <motion.nav
-      initial={{ y: -60, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
+    <nav
       style={{
         position: "sticky",
         top: 0,
-        zIndex: 999,
+        zIndex: 1000,
+        background: "rgba(10,10,10,.95)",
         backdropFilter: "blur(18px)",
-        background: "rgba(5,5,5,.75)",
         borderBottom: "1px solid rgba(212,175,55,.12)",
       }}
     >
       <div
         style={{
-          maxWidth: 1400,
+          maxWidth: 1450,
           margin: "auto",
-          height: 90,
+          padding: "18px 35px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          padding: "0 35px",
         }}
       >
-        {/* Logo Text */}
-
-        <h2
+        <div
+          onClick={() => scrollTo("home")}
           style={{
-            margin: 0,
-            fontSize: 30,
-            fontWeight: 900,
-            letterSpacing: 1,
+            fontSize: 28,
+            fontWeight: 800,
+            cursor: "pointer",
           }}
         >
-          Shadow
-          <span
-            style={{
-              color: "#D4AF37",
-            }}
-          >
-            Vault
-          </span>
-        </h2>
-
-        {/* Navigation */}
+          Shadow<span style={{ color: "#D4AF37" }}>Vault</span>
+        </div>
 
         <div
           style={{
             display: "flex",
-            gap: 40,
+            alignItems: "center",
+            gap: 45,
           }}
         >
-          <a href="#">Home</a>
-          <a href="#dashboard">Vault</a>
-          <a href="#architecture">Architecture</a>
-          <a href="#footer">About</a>
+          <NavItem
+            title="Home"
+            onClick={() => scrollTo("home")}
+          />
+          <NavItem
+  title="About"
+  onClick={() => scrollTo("about")}
+/>
+
+          <NavItem
+            title="Workflow"
+            onClick={() => scrollTo("flow")}
+          />
+
+          
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+        <button
           className="btn-primary"
+          onClick={() => scrollTo("dashboard")}
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
+            cursor: "pointer",
           }}
         >
           <ShieldCheck size={18} />
+
           Launch Vault
-        </motion.button>
+        </button>
       </div>
-    </motion.nav>
+    </nav>
+  );
+}
+
+function NavItem({ title, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "transparent",
+        border: "none",
+        color: "#B5B5B5",
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: "pointer",
+        padding: 0,
+      }}
+    >
+      {title}
+    </button>
   );
 }

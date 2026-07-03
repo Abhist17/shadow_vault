@@ -1,8 +1,8 @@
 import Navbar from "./components/layout/Navbar";
 
 import Hero from "./components/home/Hero";
+import About from "./components/home/About";
 import Features from "./components/home/Features";
-import Architecture from "./components/home/Architecture";
 
 import Deposit from "./components/vault/Deposit";
 import Commitment from "./components/vault/Commitment";
@@ -26,6 +26,8 @@ export default function App() {
 
       <Hero />
 
+      <About />
+
       <Features />
 
       {/* DASHBOARD */}
@@ -36,6 +38,7 @@ export default function App() {
           maxWidth: 1450,
           margin: "auto",
           padding: "100px 35px",
+          scrollMarginTop: 100,
         }}
       >
         <div
@@ -72,16 +75,16 @@ export default function App() {
             }}
           >
             Generate commitments, deposit assets,
-            create zero-knowledge proofs,
-            verify ownership and securely withdraw
-            using Stellar smart contracts.
+            create zero-knowledge proofs, verify ownership
+            and securely withdraw using Stellar smart contracts.
           </p>
         </div>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(420px,1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit,minmax(420px,1fr))",
             gap: 30,
           }}
         >
@@ -98,10 +101,6 @@ export default function App() {
       </section>
 
       <Timeline />
-
-      <div id="architecture">
-        <Architecture />
-      </div>
 
       <div id="footer">
         <Footer />
