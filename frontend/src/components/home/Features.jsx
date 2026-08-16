@@ -1,98 +1,58 @@
-import {
-    Lock,
-    ShieldCheck,
-    Database,
-} from "lucide-react";
+import { Coins, Cpu, Fingerprint, KeyRound, ShieldCheck, Ban } from "lucide-react";
 
-const cards = [
-{
-title:"Private Ownership",
-icon:<Lock size={42}/>,
-desc:"Only commitments are stored on-chain."
-},
-{
-title:"ZK Verified",
-icon:<ShieldCheck size={42}/>,
-desc:"Proofs are verified directly on Stellar."
-},
-{
-title:"Replay Protection",
-icon:<Database size={42}/>,
-desc:"Nullifiers prevent double withdrawals."
-}
-]
+const FEATURES = [
+  {
+    icon: Fingerprint,
+    title: "Poseidon2 commitments",
+    text: "A ZK-friendly hash binds your secret to one deposit slot. The same hash runs identically in the circuit and the backend.",
+  },
+  {
+    icon: Cpu,
+    title: "Noir + UltraHonk",
+    text: "Ownership logic lives in a Noir circuit. Barretenberg turns it into a succinct proof in well under a second.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "On-chain verification",
+    text: "A Soroban contract holds the verification key and runs the real pairing check. Nothing is trusted off-chain.",
+  },
+  {
+    icon: Ban,
+    title: "Nullifier replay guard",
+    text: "Withdrawing burns a nullifier derived from your secret, so the same proof can never be spent a second time.",
+  },
+  {
+    icon: KeyRound,
+    title: "Write-once deposit IDs",
+    text: "A deposit slot cannot be overwritten, which stops anyone resetting a live deposit to withdraw it again.",
+  },
+  {
+    icon: Coins,
+    title: "Proof-gated withdrawal",
+    text: "The vault verifies the proof itself and checks it opens this exact deposit before releasing anything.",
+  },
+];
 
-export default function Features(){
+export default function Features() {
+  return (
+    <section id="features" className="section shell">
+      <div className="section-head center">
+        <p className="eyebrow">Features</p>
+        <h2>What the protocol guarantees</h2>
+      </div>
 
-return(
+      <div className="grid">
+        {FEATURES.map(({ icon: Icon, title, text }) => (
+          <article key={title} className="card card-hover stack">
+            <span className="card-icon">
+              <Icon size={20} />
+            </span>
 
-<section
-id="features"
-style={{
-padding:"120px 80px"
-}}
->
-
-<h2
-style={{
-fontSize:52,
-marginBottom:60,
-textAlign:"center"
-}}
->
-Features
-</h2>
-
-<div
-style={{
-display:"grid",
-gridTemplateColumns:"repeat(3,1fr)",
-gap:30
-}}
->
-
-{
-cards.map(card=>(
-
-<div
-key={card.title}
-style={{
-border:"1px solid #222",
-padding:35,
-borderRadius:18,
-background:"#111"
-}}
->
-
-{card.icon}
-
-<h3
-style={{
-marginTop:20
-}}
->
-{card.title}
-</h3>
-
-<p
-style={{
-color:"#888",
-marginTop:12,
-lineHeight:1.7
-}}
->
-{card.desc}
-</p>
-
-</div>
-
-))
-}
-
-</div>
-
-</section>
-
-)
-
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
 }

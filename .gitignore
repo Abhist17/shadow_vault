@@ -1,7 +1,16 @@
+# Build output
 target/
+dist/
 node_modules/
 .vercel/
 .next/
-dist/
-.DS_Store
+
+# Secrets and local config
 .env
+.env.local
+
+# Generated proof artifacts (regenerated per request by the backend)
+backend/.artifacts/
+
+# OS noise
+.DS_Store

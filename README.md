@@ -1,54 +1,85 @@
 # ShadowVault
 
-> Privacy-preserving vault on Stellar, powered by Zero Knowledge Proofs.
+> Privacy-preserving vault on Stellar, powered by zero-knowledge proofs.
 
-ShadowVault is a privacy-focused vault built on **Stellar Soroban** that lets users securely deposit assets as cryptographic commitments and later prove ownership using **Zero Knowledge Proofs**, without ever revealing their identity, balance, or secret.
+ShadowVault is a privacy-focused vault built on **Stellar Soroban**. Deposits are recorded as
+cryptographic commitments rather than public balances, and ownership is later proved with a
+**zero-knowledge proof** that is verified **on-chain** — without revealing the depositor's secret.
 
-Instead of storing sensitive financial information on-chain, ShadowVault stores only a **Poseidon commitment**, enabling private ownership with publicly verifiable correctness.
+The chain stores `Poseidon2(secret, depositId)` and nothing else. Withdrawal requires an UltraHonk
+proof that opens that exact commitment, checked by a Soroban verifier contract, with a nullifier
+burned so the same proof can never be spent twice.
 
 ---
 
-## Table of Contents
+## Table of contents
 
-- [The Problem](#the-problem)
-- [The Solution](#the-solution)
+- [How it works](#how-it-works)
+- [Why each check exists](#why-each-check-exists)
 - [Architecture](#architecture)
-- [User Flow](#user-flow)
-- [End-to-End Flow](#end-to-end-flow)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project)
-- [Current MVP](#current-mvp)
-- [Future Scope](#future-scope)
-- [Why ShadowVault](#why-shadowvault)
+- [Project structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [API reference](#api-reference)
+- [Contract reference](#contract-reference)
+- [Testing](#testing)
+- [Scope and limitations](#scope-and-limitations)
 
 ---
 
-## The Problem
+## How it works
 
-Traditional blockchains are transparent by design. Anyone can see:
+The five stages are strictly sequential; each one is cryptographically bound to the last.
 
-- Wallet balances
-- Deposits and withdrawals
-- Full transaction history
-- Treasury movements
+| # | Stage | What happens |
+|---|-------|--------------|
+| 1 | **Derive commitment** | The backend computes `commitment = Poseidon2([secret, depositId])` and `nullifier = Poseidon2([secret])`. The secret is never stored or sent on-chain. |
+| 2 | **Deposit** | The commitment is written to the vault contract under a write-once deposit ID. |
+| 3 | **Prove** | A per-request `Prover.toml` is written, `nargo execute` builds the witness, and `bb prove` produces an UltraHonk proof. |
+| 4 | **Verify** | The Soroban verifier contract runs the real pairing check against the verification key baked in at deployment. |
+| 5 | **Withdraw** | The vault re-verifies the proof itself, confirms it opens *this* deposit, then burns the nullifier. |
 
-Transparency builds trust, but it also leaks sensitive financial data, a dealbreaker for individuals, DAOs, and institutions that need confidentiality.
+### The circuit
 
-## The Solution
+```noir
+fn main(secret: Field, deposit_id: Field, commitment: pub Field, nullifier: pub Field) {
+    assert(Poseidon2::hash([secret, deposit_id], 2) == commitment);
+    assert(Poseidon2::hash([secret], 1) == nullifier);
+}
+```
 
-ShadowVault replaces public ownership records with cryptographic commitments, verified entirely through Zero Knowledge Proofs:
+`secret` and `deposit_id` are private. Public inputs are emitted in declaration order, so the
+serialized `public_inputs` file is exactly 64 bytes:
 
-- Deposit funds privately
-- Generate a Poseidon commitment
-- Store only the commitment on-chain
-- Generate a Zero Knowledge ownership proof
-- Verify the proof on Stellar via Soroban
-- Withdraw securely without revealing private information
-- Block replay attacks using nullifiers
+```
+[0..32)   commitment   (big-endian field element)
+[32..64)  nullifier    (big-endian field element)
+```
+
+The vault contract depends on that layout to bind a proof to a deposit.
+
+> The backend computes Poseidon2 with `@aztec/bb.js`, which is byte-identical to Noir's
+> `poseidon::poseidon2::Poseidon2::hash`. This is **not** interchangeable with circomlib-style
+> Poseidon (e.g. `poseidon-lite`) — those produce different digests and every proof would fail.
+
+---
+
+## Why each check exists
+
+A valid proof on its own proves nothing about *which* deposit it opens. `Vault::withdraw` therefore
+checks all of the following, and dropping any one makes the ZK layer decorative:
+
+1. `public_inputs` decodes to exactly two field elements.
+2. The nullifier argument equals the nullifier inside the proof.
+3. A deposit exists under `deposit_id` and is not already withdrawn.
+4. **The proof's commitment equals the stored commitment** — this is what stops a proof for deposit A
+   being replayed against deposit B.
+5. The nullifier has never been spent.
+6. The verifier contract accepts the proof.
+
+Deposit IDs are write-once. Without that, anyone could re-deposit over a live slot, reset its
+`withdrawn` flag, and withdraw it a second time.
 
 ---
 
@@ -56,268 +87,247 @@ ShadowVault replaces public ownership records with cryptographic commitments, ve
 
 ```mermaid
 flowchart TB
-    A["React Frontend"] -->|API requests| B["Express Backend"]
-    B -->|secret + inputs| C["Noir Circuit"]
-    C -->|hash secret| D["Poseidon Commitment"]
-    D -->|store commitment| E["Soroban Vault Contract"]
-    C -->|generate proof| F["UltraHonk Proof Engine"]
-    F -->|submit proof| G["Soroban Verifier Contract"]
-    G -->|valid proof + nullifier check| H["Private Withdrawal"]
+    A["React frontend"] -->|JSON over HTTP| B["Express backend"]
+    B -->|Poseidon2 via bb.js| C["Commitment + nullifier"]
+    B -->|per-request Prover.toml| D["Noir circuit"]
+    D -->|witness| E["Barretenberg / UltraHonk"]
+    C -->|deposit| F["Soroban vault contract"]
+    E -->|proof + public inputs| F
+    F -->|cross-contract call| G["Soroban UltraHonk verifier"]
+    G -->|accept / reject| F
+    F -->|burn nullifier| H["Withdrawal released"]
 ```
 
 ---
 
-## User Flow
-
-### Deposit
-
-```mermaid
-flowchart LR
-    A([User]) --> B["Enter Secret"]
-    B --> C["Generate Poseidon Commitment"]
-    C --> D["Submit Commitment to Stellar Vault"]
-    D --> E([Funds Deposited Privately])
-```
-
-### Withdrawal
-
-```mermaid
-flowchart LR
-    A([User]) --> B["Recall Secret"]
-    B --> C["Generate ZK Proof via Noir + UltraHonk"]
-    C --> D["Submit Proof to Soroban Verifier"]
-    D --> E{"Proof Valid and Nullifier Unused?"}
-    E -->|Yes| F["Mark Nullifier as Spent"]
-    F --> G([Withdraw Funds])
-    E -->|No| H([Reject Transaction])
-```
-
----
-
-## End-to-End Flow
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant FE as React Frontend
-    participant BE as Express Backend
-    participant Circuit as Noir Circuit
-    participant Vault as Soroban Vault
-    participant Verifier as Soroban Verifier
-
-    User->>FE: Enter secret
-    FE->>BE: Request commitment generation
-    BE->>Circuit: Compute Poseidon(secret)
-    Circuit-->>BE: Commitment
-    BE->>Vault: Deposit(commitment)
-    Vault-->>User: Funds locked privately
-
-    Note over User,Verifier: Later - withdrawal
-
-    User->>FE: Request withdrawal
-    FE->>BE: Provide secret + nullifier inputs
-    BE->>Circuit: Generate UltraHonk proof
-    Circuit-->>BE: ZK Proof
-    BE->>Verifier: Submit proof + nullifier
-    Verifier->>Verifier: Validate proof, check nullifier unused
-    Verifier-->>Vault: Authorize withdrawal
-    Vault-->>User: Funds released
-```
-
----
-
-## Features
-
-| Feature | Description |
-|---|---|
-| Private Deposits | Assets deposited as commitments, not plaintext records |
-| Poseidon Commitments | ZK-friendly hashing for efficient on-chain storage |
-| Noir ZK Circuits | Custom circuits define ownership logic |
-| UltraHonk Proofs | Fast, succinct proof generation |
-| Soroban Verification | On-chain proof verification on Stellar |
-| Nullifier Protection | Prevents replay/double-withdrawal attacks |
-| Interactive Dashboard | React-based UI for deposits and withdrawals |
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Blockchain | Stellar, Soroban Smart Contracts |
-| Zero Knowledge | Noir, UltraHonk |
-| Cryptography | Poseidon2 Hash |
-| Smart Contracts | Rust, Soroban SDK |
-| Backend | Node.js, Express.js |
-| Frontend | React, Vite |
-
----
-
-## Project Structure
+## Project structure
 
 ```
 shadow_vault/
-├── backend/      # Express API - orchestrates proof & commitment flow
-├── frontend/     # React dashboard for deposits/withdrawals
-├── contracts/    # Soroban vault & verifier smart contracts
-├── circuits/     # Noir ZK circuits
-└── artifacts/    # Compiled circuits, proving/verification keys
+├── backend/                  Express API
+│   ├── lib/
+│   │   ├── poseidon.js       Poseidon2 over BN254 (matches the circuit exactly)
+│   │   ├── circuit.js        Per-request witness + proof generation
+│   │   ├── stellar.js        Contract invocation via execFile (never a shell)
+│   │   ├── validate.js       Input validation at the edge
+│   │   └── errors.js         Contract error codes -> readable messages
+│   └── routes/index.js       The five pipeline endpoints
+├── frontend/                 React + Vite dashboard
+│   └── src/
+│       ├── index.css         Design tokens and component styles
+│       ├── context/          Sequential pipeline state
+│       └── components/
+├── circuits/ownership_vault/ Noir circuit
+├── contracts/vault/          Soroban vault contract
+└── rs-soroban-ultrahonk/     Submodule: UltraHonk verifier for Soroban
 ```
 
 ---
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+| Tool | Version used | Install |
+|------|--------------|---------|
+| Node.js | 20+ | https://nodejs.org |
+| Rust + Cargo | 1.93+ | https://rustup.rs |
+| Stellar CLI | 27.0.0 | `cargo install --locked stellar-cli` |
+| Nargo (Noir) | 1.0.0-beta.9 | `curl -L noirup.dev \| bash && noirup -v 1.0.0-beta.9` |
+| Barretenberg (`bb`) | 0.87.0 | `curl -L bbup.dev \| bash && bbup -v 0.87.0` |
+| Docker | any | for the local Stellar network |
 
-Install the following before setting up the project:
+The Noir and `bb` versions must match — proofs from a different `bb` will not verify against a
+verification key written by another version.
 
-| Tool | Purpose | Install |
-|---|---|---|
-| Node.js (v18+) and npm | Backend and frontend | https://nodejs.org |
-| Rust and Cargo | Soroban contract compilation | https://rustup.rs |
-| Soroban CLI (`stellar` CLI) | Build and deploy contracts | `cargo install --locked stellar-cli` |
-| Nargo (Noir toolchain) | Compile and execute ZK circuits | `curl -L noirup.dev \| bash` then `noirup` |
-| Barretenberg (`bb`) | UltraHonk proof generation | `curl -L bbup.dev \| bash` then `bbup` |
-| Git | Clone the repository | https://git-scm.com |
+---
 
-### 1. Clone the repository
+## Getting started
+
+### 1. Clone with submodules
 
 ```bash
-git clone https://github.com/<your-org>/shadow_vault.git
+git clone --recurse-submodules https://github.com/Abhist17/shadow_vault.git
 cd shadow_vault
 ```
 
-### 2. Compile the Noir circuits
+Already cloned without `--recurse-submodules`? Run `git submodule update --init --recursive`.
+
+### 2. Start a local Stellar network
 
 ```bash
-cd circuits
+cd rs-soroban-ultrahonk
+bash scripts/start_stellar.sh
+```
+
+This starts the `stellar/quickstart` container on `localhost:8000`, registers the `local` network
+profile, and waits for friendbot.
+
+### 3. Fund a signing identity
+
+```bash
+stellar keys generate alice --network local
+curl "http://localhost:8000/friendbot?addr=$(stellar keys address alice)"
+```
+
+### 4. Build the circuit and its verification key
+
+```bash
+cd circuits/ownership_vault
 nargo compile
+nargo execute
+bb write_vk --scheme ultra_honk --oracle_hash keccak \
+  --bytecode_path target/ownership_vault.json \
+  --output_path target --output_format bytes_and_fields
 ```
 
-This produces the circuit artifacts used to generate witnesses and proofs.
+`--oracle_hash keccak` is mandatory. The Soroban verifier rebuilds the Fiat-Shamir transcript with
+keccak, so a proof generated with the default oracle verifies locally and is rejected on-chain.
 
-### 3. Generate proving and verification keys
+### 5. Deploy the verifier, keyed to this circuit
 
 ```bash
-bb write_vk -b ./target/circuits.json -o ../artifacts
-bb write_pk -b ./target/circuits.json -o ../artifacts
+cd ../../rs-soroban-ultrahonk
+cargo build --release --target wasm32v1-none --package identity
+
+stellar contract deploy \
+  --wasm target/wasm32v1-none/release/identity.wasm \
+  --source alice --network local -- \
+  --vk_bytes-file-path ../circuits/ownership_vault/target/vk
 ```
 
-The verification key is later embedded in the Soroban verifier contract.
+The verification key is immutable once deployed, so the circuit a vault trusts can never be swapped.
+Save the returned contract ID as `VERIFIER_CONTRACT_ID`.
 
-### 4. Build and deploy the Soroban contracts
+### 6. Deploy the vault, bound to that verifier
 
 ```bash
-cd ../contracts
+cd ../contracts/vault
 stellar contract build
 
-# Deploy the vault contract
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/vault.wasm \
-  --source <your-account> \
-  --network testnet
-
-# Deploy the verifier contract
-stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/verifier.wasm \
-  --source <your-account> \
-  --network testnet
+  --wasm target/wasm32v1-none/release/vault.wasm \
+  --source alice --network local -- \
+  --verifier <VERIFIER_CONTRACT_ID>
 ```
 
-Save both returned contract IDs, they are required for the backend configuration in the next step.
+Save the returned contract ID as `VAULT_CONTRACT_ID`.
 
-### 5. Configure the backend
+### 7. Configure and run
 
 ```bash
-cd ../backend
+cd ../../backend
 npm install
-cp .env.example .env
-```
+cp .env.example .env      # fill in the two contract IDs
+npm run dev
 
-Fill in `.env` with the values described in [Environment Variables](#environment-variables).
-
-### 6. Configure the frontend
-
-```bash
+# in a second terminal
 cd ../frontend
 npm install
 cp .env.example .env
+npm run dev
 ```
 
-Point the frontend at the backend API URL and the deployed contract IDs.
+Open http://localhost:5173 and run the flow from the dashboard.
 
 ---
 
-## Environment Variables
+## Environment variables
 
 ### Backend (`backend/.env`)
 
-| Variable | Description |
-|---|---|
-| `PORT` | Port the Express server listens on |
-| `STELLAR_NETWORK` | `testnet` or `mainnet` |
-| `STELLAR_RPC_URL` | Soroban RPC endpoint |
-| `VAULT_CONTRACT_ID` | Deployed vault contract address |
-| `VERIFIER_CONTRACT_ID` | Deployed verifier contract address |
-| `CIRCUITS_PATH` | Path to compiled Noir circuit artifacts |
-| `SOROBAN_SOURCE_SECRET` | Secret key used to sign backend-submitted transactions |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PORT` | no | API port (default `5000`) |
+| `STELLAR_NETWORK` | no | Network profile name (default `local`) |
+| `STELLAR_SOURCE_ACCOUNT` | no | Signing identity (default `alice`) |
+| `VAULT_CONTRACT_ID` | **yes** | Deployed vault contract |
+| `VERIFIER_CONTRACT_ID` | **yes** | Deployed verifier contract |
+| `NARGO_BIN` / `BB_BIN` / `STELLAR_BIN` | no | Absolute paths; resolved from `PATH` when unset |
+| `CIRCUIT_DIR` | no | Override the circuit package location |
 
 ### Frontend (`frontend/.env`)
 
-| Variable | Description |
-|---|---|
-| `VITE_API_URL` | URL of the running Express backend |
-| `VITE_VAULT_CONTRACT_ID` | Deployed vault contract address |
-| `VITE_VERIFIER_CONTRACT_ID` | Deployed verifier contract address |
-| `VITE_STELLAR_NETWORK` | `testnet` or `mainnet` |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | no | Backend URL (default `http://localhost:5000`) |
 
 ---
 
-## Running the Project
+## API reference
 
-Once dependencies are installed, contracts are deployed, and environment variables are set:
+All responses are `{ success: true, ... }` or `{ success: false, error: "<readable message>" }`.
+
+| Method | Route | Body | Purpose |
+|--------|-------|------|---------|
+| `GET` | `/health` | — | Contract IDs and resolved signing address |
+| `POST` | `/deposit` | `{ secret, depositId, amount }` | Derive commitment + nullifier (no chain access) |
+| `POST` | `/deposit-stellar` | `{ depositId, commitment, amount }` | Record the commitment on-chain |
+| `POST` | `/proof` | `{ secret, depositId }` | Generate an UltraHonk proof |
+| `POST` | `/verify` | `{ depositId }` | Check the proof against the verifier contract |
+| `POST` | `/withdraw` | `{ depositId }` | Withdraw; the vault re-verifies and burns the nullifier |
+| `GET` | `/deposit/:depositId` | — | Read the on-chain deposit record |
+
+---
+
+## Contract reference
+
+`Vault` (`contracts/vault/src/lib.rs`):
+
+| Function | Notes |
+|----------|-------|
+| `__constructor(verifier)` | Binds the vault to a verifier. Immutable. |
+| `deposit(depositor, deposit_id, commitment, amount)` | Requires auth; deposit IDs are write-once. |
+| `get_deposit(deposit_id)` | Returns the stored record. |
+| `withdraw(deposit_id, nullifier, public_inputs, proof)` | Runs all six binding checks above. |
+| `is_nullifier_used(nullifier)` | Replay-guard lookup. |
+
+Error codes surfaced as `Error(Contract, #N)`:
+
+| # | Meaning | # | Meaning |
+|---|---------|---|---------|
+| 1 | AlreadyWithdrawn | 7 | NullifierMismatch |
+| 2 | DepositNotFound | 8 | ProofRejected |
+| 3 | DepositIdTaken | 9 | InvalidAmount |
+| 4 | NullifierAlreadyUsed | 10 | AlreadyInitialized |
+| 5 | CommitmentMismatch | 11 | VerifierNotSet |
+| 6 | MalformedPublicInputs | | |
+
+---
+
+## Testing
 
 ```bash
-# Terminal 1 - start the backend
-cd backend
-npm run dev
+# Circuit — asserts the commitment/nullifier vector the backend also produces
+cd circuits/ownership_vault && nargo test
 
-# Terminal 2 - start the frontend
-cd frontend
-npm run dev
+# Frontend
+cd frontend && npx eslint . && npm run build
 ```
 
-Open the frontend in your browser (typically `http://localhost:5173`), connect a Stellar testnet account, and walk through the deposit and withdrawal flow described above.
+The security properties were exercised against a live local network:
 
-To rebuild circuits or contracts after making changes, repeat the relevant step from [Getting Started](#getting-started) and restart the backend so it picks up any new contract IDs or artifacts.
-
----
-
-## Current MVP
-
-- React Dashboard
-- Express Backend
-- Noir Circuit Integration
-- Poseidon Commitment Generation
-- Soroban Vault Contract
-- Private Deposit Flow
-- Zero Knowledge Proof Pipeline
-- Nullifier-based Replay Protection
-
-## Future Scope
-
-- USDC Integration
-- Private Treasury Management
-- Yield Strategies
-- DAO Treasury Support
-- ZK Solvency Proofs
-- Institutional Vaults
-- Wallet Integration (Freighter, etc.)
-- Cross-chain Privacy
+| Scenario | Result |
+|----------|--------|
+| Valid proof, correct deposit | withdraws |
+| Replay the same proof | `#1 AlreadyWithdrawn` |
+| Re-deposit over a live ID | `#3 DepositIdTaken` |
+| Valid proof aimed at a different deposit | `#5 CommitmentMismatch` |
+| Proof generated from the wrong secret | `#5 CommitmentMismatch` |
+| Deposit signed by the wrong account | rejected before submission |
+| Shell metacharacters in `depositId` | rejected by input validation |
 
 ---
 
-## Why ShadowVault
+## Scope and limitations
 
-ShadowVault combines the privacy guarantees of Zero Knowledge Proofs with the security and speed of Stellar. Instead of exposing financial information publicly, users prove ownership cryptographically, making blockchain applications viable for individuals, DAOs, and institutions that require confidentiality without sacrificing verifiability.
+Worth being explicit about what this does and does not do:
+
+- **No token custody.** `amount` is recorded alongside the commitment; the vault does not hold or
+  transfer real XLM or any token contract balance. Adding custody means wiring a token contract into
+  `deposit`/`withdraw`.
+- **The backend holds the signing key.** It submits transactions on the user's behalf, so it is
+  trusted for liveness and ordering. It never sees more than the user types, and the secret is not
+  persisted, but a production build would sign in the browser via a wallet.
+- **Nullifiers are per-secret, not per-deposit.** `Poseidon2([secret])` means one secret can be
+  withdrawn once across all deposits. Reusing a secret for a second deposit makes it unwithdrawable.
+- **One verifier per circuit.** The verification key is fixed at deployment, so changing the circuit
+  requires redeploying both contracts.

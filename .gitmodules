@@ -1,0 +1,3 @@
+[submodule "rs-soroban-ultrahonk"]
+	path = rs-soroban-ultrahonk
+	url = https://github.com/yugocabrio/rs-soroban-ultrahonk.git

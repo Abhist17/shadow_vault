@@ -1,107 +1,75 @@
-import { ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, ShieldCheck, X } from "lucide-react";
+
+const LINKS = [
+  { id: "about", label: "Why" },
+  { id: "features", label: "Features" },
+  { id: "flow", label: "Protocol" },
+  { id: "vault", label: "Vault" },
+];
 
 export default function Navbar() {
-  const scrollTo = (id) => {
-    const section = document.getElementById(id);
+  const [open, setOpen] = useState(false);
 
-    if (section) {
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  };
+  // Lock scroll behind the mobile drawer so the page cannot move underneath it.
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  function go(id) {
+    setOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
-    <nav
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-        background: "rgba(10,10,10,.95)",
-        backdropFilter: "blur(18px)",
-        borderBottom: "1px solid rgba(212,175,55,.12)",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1450,
-          margin: "auto",
-          padding: "18px 35px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div
-          onClick={() => scrollTo("home")}
-          style={{
-            fontSize: 28,
-            fontWeight: 800,
-            cursor: "pointer",
-          }}
-        >
-          Shadow<span style={{ color: "#D4AF37" }}>Vault</span>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 45,
-          }}
-        >
-          <NavItem
-            title="Home"
-            onClick={() => scrollTo("home")}
-          />
-          <NavItem
-  title="About"
-  onClick={() => scrollTo("about")}
-/>
-
-          <NavItem
-            title="Workflow"
-            onClick={() => scrollTo("flow")}
-          />
-
-          
-        </div>
-
-        <button
-          className="btn-primary"
-          onClick={() => scrollTo("dashboard")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            cursor: "pointer",
-          }}
-        >
-          <ShieldCheck size={18} />
-
-          Launch Vault
+    <header className="nav">
+      <div className="nav-inner shell">
+        <button className="nav-brand" onClick={() => go("top")}>
+          Shadow<span className="gold">Vault</span>
         </button>
-      </div>
-    </nav>
-  );
-}
 
-function NavItem({ title, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        background: "transparent",
-        border: "none",
-        color: "#B5B5B5",
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: "pointer",
-        padding: 0,
-      }}
-    >
-      {title}
-    </button>
+        <nav className="nav-links" aria-label="Sections">
+          {LINKS.map((link) => (
+            <button key={link.id} className="nav-link" onClick={() => go(link.id)}>
+              {link.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="nav-actions">
+          <button className="btn btn-primary nav-cta" onClick={() => go("vault")}>
+            <ShieldCheck size={16} />
+            Launch vault
+          </button>
+
+          <button
+            className="btn btn-icon nav-toggle"
+            onClick={() => setOpen((value) => !value)}
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="nav-drawer">
+          {LINKS.map((link) => (
+            <button key={link.id} className="nav-drawer-link" onClick={() => go(link.id)}>
+              {link.label}
+            </button>
+          ))}
+
+          <button className="btn btn-primary btn-block" onClick={() => go("vault")}>
+            <ShieldCheck size={16} />
+            Launch vault
+          </button>
+        </div>
+      )}
+    </header>
   );
 }

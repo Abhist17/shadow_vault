@@ -1,215 +1,82 @@
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Lock,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Code2, Lock, ShieldCheck, Sparkles } from "lucide-react";
 
 import logo from "../../assets/sv1.jpeg";
 
+const BADGES = [
+  { icon: <ShieldCheck size={15} />, label: "Stellar" },
+  { icon: <Lock size={15} />, label: "Noir" },
+  { icon: <Sparkles size={15} />, label: "UltraHonk" },
+  { icon: <ShieldCheck size={15} />, label: "Soroban" },
+];
+
 export default function Hero() {
+  function go(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <section
-      style={{
-        minHeight: "100vh",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        overflow: "hidden",
-        background:
-          "linear-gradient(180deg,#050505 0%,#090909 40%,#0d0d0d 100%)",
-        borderBottom: "1px solid rgba(212,175,55,.08)",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1400,
-          width: "100%",
-          margin: "auto",
-          display: "grid",
-          gridTemplateColumns: "1.05fr .95fr",
-          gap: 60,
-          alignItems: "center",
-          padding: "100px 50px",
-        }}
-      >
-        {/* LEFT */}
-
+    <section id="top" className="hero">
+      <div className="shell hero-grid">
         <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: .8 }}
+          className="stack hero-copy"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 0.68, 0.35, 1] }}
         >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "10px 18px",
-              borderRadius: 999,
-              border: "1px solid rgba(212,175,55,.20)",
-              background: "rgba(212,175,55,.04)",
-              color: "#D4AF37",
-              marginBottom: 35,
-              fontWeight: 600,
-            }}
-          >
-            <Sparkles size={16} />
+          <span className="pill">
+            <Sparkles size={14} />
+            Powered by zero knowledge
+          </span>
 
-            Powered by Zero Knowledge
-          </div>
-
-          <h1
-            style={{
-              fontSize: 82,
-              lineHeight: 1,
-              marginBottom: 30,
-              fontWeight: 900,
-            }}
-          >
-            Privacy
-
+          <h1>
+            Privacy,
             <br />
-
-            <span
-              style={{
-                color: "#D4AF37",
-              }}
-            >
-              Verified
-            </span>
-
-            <br />
-
-            On Stellar.
+            <span className="gold">verified</span> on Stellar.
           </h1>
 
-          <p
-            style={{
-              color: "#AFAFAF",
-              fontSize: 21,
-              lineHeight: 1.9,
-              maxWidth: 580,
-            }}
-          >
-            ShadowVault enables confidential treasury
-            ownership through Noir, Ultrahonk and
-            Soroban smart contracts while keeping
-            user identity completely private.
+          <p className="lede">
+            ShadowVault records deposits as Poseidon2 commitments instead of public balances. Prove
+            you own one with a zero-knowledge proof, verified on-chain by a Soroban contract — the
+            secret never leaves your machine.
           </p>
 
-          <div
-            style={{
-              display: "flex",
-              gap: 18,
-              marginTop: 45,
-            }}
-          >
-            
+          <div className="row hero-actions">
+            <button className="btn btn-primary" onClick={() => go("vault")}>
+              Launch the vault
+              <ArrowRight size={16} />
+            </button>
 
-            <button
-  onClick={() =>
-    window.open(
-      "https://github.com/Abhist17/shadow_vault",
-      "_blank",
-      "noopener,noreferrer"
-    )
-  }
-  style={{
-    padding: "16px 26px",
-    background: "transparent",
-    color: "white",
-    border: "1px solid #333",
-    borderRadius: 14,
-    cursor: "pointer",
-    fontWeight: 600,
-  }}
->
-  GitHub
-</button>
+            <a
+              className="btn btn-ghost"
+              href="https://github.com/Abhist17/shadow_vault"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Code2 size={16} />
+              View source
+            </a>
           </div>
 
-          <div
-            style={{
-              width: 180,
-              height: 3,
-              background: "#D4AF37",
-              borderRadius: 999,
-              marginTop: 45,
-            }}
-          />
-
-          <div
-            style={{
-              display: "flex",
-              gap: 18,
-              marginTop: 35,
-              flexWrap: "wrap",
-            }}
-          >
-            <Badge icon={<ShieldCheck size={17} />} text="Stellar" />
-
-            <Badge icon={<Lock size={17} />} text="Noir" />
-
-            <Badge icon="⚡" text="Ultrahonk" />
-
-            <Badge icon="🔒" text="Soroban" />
+          <div className="row hero-badges">
+            {BADGES.map((badge) => (
+              <span key={badge.label} className="pill">
+                {badge.icon}
+                {badge.label}
+              </span>
+            ))}
           </div>
         </motion.div>
 
-        {/* RIGHT */}
-
         <motion.div
-          initial={{
-            opacity: 0,
-            x: 40,
-          }}
-          animate={{
-            opacity: 1,
-            x: 0,
-          }}
-          transition={{
-            duration: .8,
-          }}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-          }}
+          className="hero-art"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 0.68, 0.35, 1] }}
         >
-          <img
-            src={logo}
-            alt="ShadowVault"
-            style={{
-              width: 620,
-              maxWidth: "100%",
-              borderRadius: 32,
-              opacity: .96,
-            }}
-          />
+          <img src={logo} alt="" aria-hidden="true" />
         </motion.div>
       </div>
     </section>
-  );
-}
-
-function Badge({ icon, text }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "12px 18px",
-        borderRadius: 999,
-        background: "#111",
-        border: "1px solid #202020",
-        color: "#D4AF37",
-        fontWeight: 600,
-      }}
-    >
-      {icon}
-      {text}
-    </div>
   );
 }

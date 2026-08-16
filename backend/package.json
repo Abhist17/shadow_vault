@@ -1,11 +1,11 @@
 {
-  "name": "backend",
+  "name": "shadowvault-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "ShadowVault API: Poseidon2 commitments, UltraHonk proving, and Soroban vault orchestration.",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +16,6 @@
     "@noir-lang/noir_js": "^1.0.0-beta.22",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "poseidon-lite": "^0.3.0"
+    "express": "^5.2.1"
   }
 }

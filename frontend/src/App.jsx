@@ -1,110 +1,45 @@
+import { Toaster } from "sonner";
+
 import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
 
 import Hero from "./components/home/Hero";
 import About from "./components/home/About";
 import Features from "./components/home/Features";
+import Protocol from "./components/home/Protocol";
 
-import Deposit from "./components/vault/Deposit";
-import Commitment from "./components/vault/Commitment";
-import Proof from "./components/vault/Proof";
-import Verification from "./components/vault/Verification";
-import Withdraw from "./components/vault/Withdraw";
-import Timeline from "./components/vault/Timeline";
-
-import Footer from "./components/layout/Footer";
+import Dashboard from "./components/vault/Dashboard";
+import { VaultProvider } from "./context/VaultContext";
 
 export default function App() {
   return (
-    <main
-      style={{
-        background: "#050505",
-        color: "#fff",
-        minHeight: "100vh",
-      }}
-    >
+    <VaultProvider>
       <Navbar />
 
-      <Hero />
+      <main>
+        <Hero />
+        <About />
+        <Features />
+        <Protocol />
+        <Dashboard />
+      </main>
 
-      <About />
+      <Footer />
 
-      <Features />
-
-      {/* DASHBOARD */}
-
-      <section
-        id="dashboard"
-        style={{
-          maxWidth: 1450,
-          margin: "auto",
-          padding: "100px 35px",
-          scrollMarginTop: 100,
+      {/* Replaces the blocking alert() calls the old flow used for every result. */}
+      <Toaster
+        theme="dark"
+        position="bottom-right"
+        richColors
+        closeButton
+        toastOptions={{
+          style: {
+            background: "var(--surface-raised)",
+            border: "1px solid var(--gold-line)",
+            color: "var(--text)",
+          },
         }}
-      >
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: 60,
-          }}
-        >
-          <p
-            style={{
-              color: "#D4AF37",
-              letterSpacing: 2,
-              fontWeight: 700,
-            }}
-          >
-            VAULT CONTROL PANEL
-          </p>
-
-          <h2
-            style={{
-              fontSize: 52,
-              marginTop: 15,
-            }}
-          >
-            ShadowVault Dashboard
-          </h2>
-
-          <p
-            style={{
-              color: "#999",
-              maxWidth: 700,
-              margin: "20px auto",
-              lineHeight: 1.8,
-            }}
-          >
-            Generate commitments, deposit assets,
-            create zero-knowledge proofs, verify ownership
-            and securely withdraw using Stellar smart contracts.
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit,minmax(420px,1fr))",
-            gap: 30,
-          }}
-        >
-          <Deposit />
-
-          <Commitment />
-
-          <Proof />
-
-          <Verification />
-
-          <Withdraw />
-        </div>
-      </section>
-
-      <Timeline />
-
-      <div id="footer">
-        <Footer />
-      </div>
-    </main>
+      />
+    </VaultProvider>
   );
 }
