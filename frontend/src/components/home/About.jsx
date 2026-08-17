@@ -1,5 +1,8 @@
 import { Database, Eye, Fingerprint, LockKeyhole, ShieldAlert, ShieldCheck } from "lucide-react";
 
+import Reveal from "../ui/Reveal";
+import { useSpotlight } from "../../hooks/useSpotlight";
+
 const PROBLEMS = [
   {
     icon: Eye,
@@ -39,48 +42,47 @@ const SOLUTIONS = [
 export default function About() {
   return (
     <section id="about" className="section shell">
-      <div className="section-head center">
+      <Reveal className="section-head center">
         <p className="eyebrow">Why ShadowVault</p>
         <h2>
           Blockchains are transparent.
           <br />
-          <span className="gold">Your treasury shouldn't be.</span>
+          <span className="shine">Your treasury shouldn't be.</span>
         </h2>
-      </div>
+      </Reveal>
 
       <div className="compare">
-        <Column
-          label="The problem"
-          tone="problem"
-          items={PROBLEMS}
-        />
-        <Column
-          label="The approach"
-          tone="solution"
-          items={SOLUTIONS}
-        />
+        <Column label="The problem" tone="problem" items={PROBLEMS} />
+        <Column label="The approach" tone="solution" items={SOLUTIONS} />
       </div>
     </section>
   );
 }
 
 function Column({ label, tone, items }) {
+  const onSpotlight = useSpotlight();
+
   return (
     <div className="stack">
       <p className={`compare-label compare-label-${tone}`}>{label}</p>
 
       <div className="stack">
-        {items.map(({ icon: Icon, title, text }) => (
-          <article key={title} className="card card-hover compare-item">
-            <span className={`card-icon card-icon-${tone}`}>
-              <Icon size={20} />
-            </span>
+        {items.map(({ icon: Icon, title, text }, index) => (
+          <Reveal key={title} delay={index * 0.08}>
+            <article
+              className={`card card-hover compare-item compare-item-${tone}`}
+              onMouseMove={onSpotlight}
+            >
+              <span className={`card-icon card-icon-${tone}`}>
+                <Icon size={20} />
+              </span>
 
-            <div>
-              <h3>{title}</h3>
-              <p>{text}</p>
-            </div>
-          </article>
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </article>
+          </Reveal>
         ))}
       </div>
     </div>

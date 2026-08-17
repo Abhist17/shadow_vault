@@ -1,7 +1,10 @@
 import { AlertCircle, Check, Loader2, Lock } from "lucide-react";
 
+import Reveal from "../ui/Reveal";
+import { useSpotlight } from "../../hooks/useSpotlight";
+
 const STATUS_LABEL = {
-  idle: "Waiting",
+  idle: "Ready",
   running: "Working",
   done: "Complete",
   error: "Failed",
@@ -25,10 +28,11 @@ export default function StepCard({
   children,
   action,
 }) {
+  const onSpotlight = useSpotlight();
   const state = locked && status === "idle" ? "locked" : status;
 
   return (
-    <li className={`step ${state === "done" ? "step-done" : ""}`}>
+    <Reveal as="li" y={16} className={`step step-${state} ${locked && status === "idle" ? "step-locked-card" : ""}`}>
       <div className="step-rail" aria-hidden="true">
         <span className={`step-dot step-dot-${state}`}>
           {state === "done" ? (
@@ -45,7 +49,7 @@ export default function StepCard({
         </span>
       </div>
 
-      <div className="card step-body">
+      <div className="card step-body" onMouseMove={onSpotlight}>
         <div className="row-between">
           <div>
             <p className="eyebrow">Step {String(index).padStart(2, "0")}</p>
@@ -54,7 +58,9 @@ export default function StepCard({
 
           <span className={`status status-${statusClass(state)}`}>
             {state === "running" && <Loader2 size={13} className="spin" />}
-            {STATUS_LABEL[status] ?? "Locked"}
+            {state === "done" && <Check size={13} strokeWidth={3} />}
+            {state === "locked" && <Lock size={11} />}
+            {STATUS_LABEL[state] ?? "Locked"}
           </span>
         </div>
 
@@ -63,14 +69,14 @@ export default function StepCard({
         {children}
 
         {error && (
-          <p className="step-error" role="alert">
+          <p className="step-error-msg" role="alert">
             <AlertCircle size={15} />
             <span>{error}</span>
           </p>
         )}
 
         {locked && status === "idle" ? (
-          <p className="step-locked">
+          <p className="step-lock-note">
             <Lock size={13} />
             {lockedReason}
           </p>
@@ -78,7 +84,7 @@ export default function StepCard({
           action
         )}
       </div>
-    </li>
+    </Reveal>
   );
 }
 

@@ -10,6 +10,15 @@ const BADGES = [
   { icon: <ShieldCheck size={15} />, label: "Soroban" },
 ];
 
+const STATS = [
+  { value: "0", label: "Secrets revealed" },
+  { value: "<1s", label: "Proving time" },
+  { value: "5", label: "Pipeline stages" },
+  { value: "1×", label: "Nullifier spend" },
+];
+
+const EASE = [0.16, 1, 0.3, 1];
+
 export default function Hero() {
   function go(id) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -22,17 +31,17 @@ export default function Hero() {
           className="stack hero-copy"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 0.68, 0.35, 1] }}
+          transition={{ duration: 0.7, ease: EASE }}
         >
           <span className="pill">
-            <Sparkles size={14} />
+            <span className="dot-live" aria-hidden="true" />
             Powered by zero knowledge
           </span>
 
           <h1>
             Privacy,
             <br />
-            <span className="gold">verified</span> on Stellar.
+            <span className="shine">verified</span> on Stellar.
           </h1>
 
           <p className="lede">
@@ -70,13 +79,39 @@ export default function Hero() {
 
         <motion.div
           className="hero-art"
-          initial={{ opacity: 0, scale: 0.96 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 0.68, 0.35, 1] }}
+          transition={{ duration: 0.8, delay: 0.12, ease: EASE }}
         >
-          <img src={logo} alt="" aria-hidden="true" />
+          {/* Decorative orbits; the image itself carries no meaning either. */}
+          <span className="orbit orbit-2" aria-hidden="true" />
+          <span className="orbit orbit-1" aria-hidden="true" />
+
+          <motion.img
+            src={logo}
+            alt=""
+            aria-hidden="true"
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          />
         </motion.div>
       </div>
+
+      <motion.div
+        className="shell"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.35, ease: EASE }}
+      >
+        <div className="hero-stats">
+          {STATS.map((stat) => (
+            <div key={stat.label} className="hero-stat">
+              <b>{stat.value}</b>
+              <span>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
     </section>
   );
 }

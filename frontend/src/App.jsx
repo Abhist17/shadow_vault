@@ -9,11 +9,14 @@ import Features from "./components/home/Features";
 import Protocol from "./components/home/Protocol";
 
 import Dashboard from "./components/vault/Dashboard";
+import Aurora from "./components/ui/Aurora";
+import ScrollTop from "./components/ui/ScrollTop";
 import { VaultProvider } from "./context/VaultContext";
 
 export default function App() {
   return (
     <VaultProvider>
+      <Aurora />
       <Navbar />
 
       <main>
@@ -25,6 +28,7 @@ export default function App() {
       </main>
 
       <Footer />
+      <ScrollTop />
 
       {/* Replaces the blocking alert() calls the old flow used for every result. */}
       <Toaster

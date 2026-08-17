@@ -1,4 +1,4 @@
-import { Code2, ShieldCheck } from "lucide-react";
+import { Code2, Heart, ShieldCheck } from "lucide-react";
 
 const REPO = "https://github.com/Abhist17/shadow_vault";
 
@@ -8,6 +8,9 @@ export default function Footer() {
       <div className="shell footer-inner">
         <div className="stack" style={{ gap: "0.5rem" }}>
           <p className="footer-brand">
+            <span className="nav-mark" aria-hidden="true">
+              <ShieldCheck size={16} />
+            </span>
             Shadow<span className="gold">Vault</span>
           </p>
           <p className="footer-note">
@@ -23,7 +26,7 @@ export default function Footer() {
           </a>
 
           <span className="pill">
-            <ShieldCheck size={14} />
+            <span className="dot-live" aria-hidden="true" />
             Testnet demo
           </span>
         </div>
@@ -31,6 +34,9 @@ export default function Footer() {
 
       <div className="shell footer-base">
         <span className="faint">Built with Noir · Barretenberg · Soroban · Stellar</span>
+        <span className="faint" style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+          Made with <Heart size={12} className="gold" /> for private ownership
+        </span>
       </div>
     </footer>
   );

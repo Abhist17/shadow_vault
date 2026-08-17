@@ -1,5 +1,8 @@
 import { Coins, Cpu, Fingerprint, KeyRound, ShieldCheck, Ban } from "lucide-react";
 
+import Reveal from "../ui/Reveal";
+import { useSpotlight } from "../../hooks/useSpotlight";
+
 const FEATURES = [
   {
     icon: Fingerprint,
@@ -34,23 +37,29 @@ const FEATURES = [
 ];
 
 export default function Features() {
+  const onSpotlight = useSpotlight();
+
   return (
     <section id="features" className="section shell">
-      <div className="section-head center">
+      <Reveal className="section-head center">
         <p className="eyebrow">Features</p>
-        <h2>What the protocol guarantees</h2>
-      </div>
+        <h2>
+          What the protocol <span className="shine">guarantees</span>
+        </h2>
+      </Reveal>
 
       <div className="grid">
-        {FEATURES.map(({ icon: Icon, title, text }) => (
-          <article key={title} className="card card-hover stack">
-            <span className="card-icon">
-              <Icon size={20} />
-            </span>
+        {FEATURES.map(({ icon: Icon, title, text }, index) => (
+          <Reveal key={title} delay={(index % 3) * 0.08}>
+            <article className="card card-hover stack" onMouseMove={onSpotlight}>
+              <span className="card-icon">
+                <Icon size={20} />
+              </span>
 
-            <h3>{title}</h3>
-            <p>{text}</p>
-          </article>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </article>
+          </Reveal>
         ))}
       </div>
     </section>

@@ -1,5 +1,8 @@
 import { ArrowDownToLine, BadgeCheck, Cpu, Fingerprint, LockKeyhole, WalletCards } from "lucide-react";
 
+import Reveal from "../ui/Reveal";
+import { useSpotlight } from "../../hooks/useSpotlight";
+
 const STAGES = [
   {
     icon: WalletCards,
@@ -48,55 +51,69 @@ const STACK = [
 ];
 
 export default function Protocol() {
+  const onSpotlight = useSpotlight();
+
   return (
     <section id="flow" className="section protocol">
       <div className="shell">
-        <div className="section-head center">
+        <Reveal className="section-head center">
           <p className="eyebrow">
             <LockKeyhole size={14} />
             ShadowVault protocol
           </p>
           <h2>
-            From deposit to <span className="gold">private withdrawal</span>
+            From deposit to <span className="shine">private withdrawal</span>
           </h2>
           <p className="lede">One ownership lifecycle, five cryptographic and on-chain stages.</p>
-        </div>
+        </Reveal>
 
-        {/* Auto-fit grid rather than a fixed 9-column track, so the stages wrap
+        {/* Auto-fit grid rather than a fixed track count, so the stages wrap
             instead of overflowing the viewport on anything under a wide desktop. */}
         <ol className="stages">
           {STAGES.map((stage, index) => (
-            <li key={stage.title} className="card card-hover stage">
-              <div className="row-between">
-                <span className="eyebrow">Stage {String(index + 1).padStart(2, "0")}</span>
-                <span className="stage-index" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
+            <Reveal key={stage.title} as="li" delay={index * 0.07}>
+              <div className="card card-hover stage" onMouseMove={onSpotlight}>
+                <div className="row-between" style={{ width: "100%" }}>
+                  <span className="eyebrow">Stage {String(index + 1).padStart(2, "0")}</span>
+                  <span className="stage-index" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <span className="card-icon">
+                  <stage.icon size={20} strokeWidth={1.8} />
                 </span>
+
+                <div className="stack" style={{ gap: "0.35rem" }}>
+                  <p className="stage-sub">{stage.subtitle}</p>
+                  <h3>{stage.title}</h3>
+                  <p>{stage.text}</p>
+                </div>
+
+                <span className="pill stage-tech">{stage.tech}</span>
               </div>
-
-              <span className="card-icon">
-                <stage.icon size={20} strokeWidth={1.8} />
-              </span>
-
-              <div className="stack" style={{ gap: "0.35rem" }}>
-                <p className="stage-sub">{stage.subtitle}</p>
-                <h3>{stage.title}</h3>
-                <p>{stage.text}</p>
-              </div>
-
-              <span className="pill stage-tech">{stage.tech}</span>
-            </li>
+            </Reveal>
           ))}
         </ol>
 
-        <div className="section-head center" style={{ marginTop: "var(--section-y)" }}>
+        <Reveal className="section-head center" style={{ marginTop: "var(--section-y)" }}>
           <p className="eyebrow">Built with</p>
           <h2>The stack underneath</h2>
-        </div>
+        </Reveal>
+      </div>
 
-        <div className="grid stack-grid">
-          {STACK.map((item) => (
-            <article key={item.name} className="card card-hover tech">
+      {/* Full-bleed on purpose: the marquee reads as a moving band across the
+          page, so it is deliberately outside the .shell max-width. */}
+      <div className="marquee">
+        <div className="marquee-track">
+          {[...STACK, ...STACK].map((item, index) => (
+            <article
+              /* The second run is a visual duplicate, so the index is the key. */
+              key={`${item.name}-${index}`}
+              className="card card-hover tech"
+              onMouseMove={onSpotlight}
+              aria-hidden={index >= STACK.length}
+            >
               <img
                 src={`https://cdn.simpleicons.org/${item.slug}/d4af37`}
                 alt=""

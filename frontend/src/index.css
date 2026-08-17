@@ -1,30 +1,43 @@
 /* ============================================================================
-   ShadowVault design system
+   ShadowVault design system — v2
    Everything visual is defined here as tokens. Components consume classes, not
    inline style objects, so spacing and colour stay consistent and the whole UI
-   can respond to viewport size — which inline styles could never do.
+   can respond to viewport size.
+
+   v2 adds a second accent (cyan), an animated aurora field, glass surfaces with
+   a cursor-tracked spotlight, and gradient borders — the "depth" pass on top of
+   the flat v1 palette.
    ========================================================================== */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Surfaces */
-  --bg: #050505;
-  --surface: #0c0c0d;
-  --surface-raised: #121213;
-  --surface-inset: #08080a;
+  /* Surfaces — a faint violet undertone stops the black reading as flat grey */
+  --bg: #050507;
+  --surface: #0b0b10;
+  --surface-raised: #121218;
+  --surface-inset: #08080c;
+  --glass: rgba(255, 255, 255, 0.028);
+  --glass-strong: rgba(255, 255, 255, 0.055);
 
   /* Brand */
   --gold: #d4af37;
-  --gold-bright: #f4c542;
+  --gold-bright: #f7d160;
   --gold-soft: rgba(212, 175, 55, 0.14);
   --gold-line: rgba(212, 175, 55, 0.18);
-  --gold-line-strong: rgba(212, 175, 55, 0.45);
+  --gold-line-strong: rgba(212, 175, 55, 0.5);
+
+  /* Secondary accent — the "cryptographic" counterweight to the gold */
+  --cyan: #5eead4;
+  --cyan-dim: #2dd4bf;
+  --cyan-soft: rgba(94, 234, 212, 0.12);
+  --violet: #a78bfa;
+  --violet-soft: rgba(167, 139, 250, 0.12);
 
   /* Text */
-  --text: #f2f2f3;
-  --text-muted: #9d9da3;
-  --text-faint: #6a6a70;
+  --text: #f4f4f6;
+  --text-muted: #a1a1aa;
+  --text-faint: #6c6c78;
 
   /* Status */
   --success: #4ade80;
@@ -35,13 +48,15 @@
 
   /* Structure */
   --line: rgba(255, 255, 255, 0.07);
+  --line-bright: rgba(255, 255, 255, 0.12);
   --radius: 16px;
   --radius-lg: 22px;
+  --radius-xl: 28px;
   --radius-pill: 999px;
 
   /* Fluid type scale — clamp() is what makes the page survive small screens */
-  --fs-display: clamp(2.5rem, 1.4rem + 4.6vw, 5.1rem);
-  --fs-h2: clamp(1.9rem, 1.25rem + 2.6vw, 3.25rem);
+  --fs-display: clamp(2.5rem, 1.5rem + 3.4vw, 4.5rem);
+  --fs-h2: clamp(1.9rem, 1.25rem + 2.6vw, 3.3rem);
   --fs-h3: clamp(1.15rem, 1rem + 0.6vw, 1.5rem);
   --fs-body: clamp(0.95rem, 0.9rem + 0.25vw, 1.075rem);
   --fs-small: 0.875rem;
@@ -53,8 +68,10 @@
   --page-x: clamp(1.1rem, 0.5rem + 2.5vw, 2.25rem);
   --maxw: 1280px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6), 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.6), 0 18px 50px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 0 1px var(--gold-line), 0 20px 60px -20px rgba(212, 175, 55, 0.35);
   --ease: cubic-bezier(0.22, 0.68, 0.35, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 *,
@@ -79,36 +96,98 @@ body {
   font-family: Inter, system-ui, -apple-system, sans-serif;
   font-size: var(--fs-body);
   line-height: 1.65;
-  /* overflow-x:hidden used to mask the fixed-width layouts. The layouts are
-     fluid now, so this is a guard rail rather than a cover-up. */
+  /* Guard rail: the layouts are fluid, this just catches decorative overflow. */
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Ambient light. Fixed + non-interactive so it never affects layout. */
-body::before {
-  content: "";
+/* ---------------------------------------------------------------- ambience */
+
+/* Aurora field. Fixed + non-interactive so it never affects layout, and it
+   drifts slowly enough to read as light rather than as animation. */
+.aurora {
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: -3;
   pointer-events: none;
-  background:
-    radial-gradient(60vw 60vw at 15% 0%, rgba(212, 175, 55, 0.1), transparent 60%),
-    radial-gradient(50vw 50vw at 90% 10%, rgba(212, 175, 55, 0.06), transparent 60%);
+  overflow: hidden;
 }
 
+.aurora span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+}
+
+.aurora-a {
+  width: 46vw;
+  height: 46vw;
+  min-width: 320px;
+  min-height: 320px;
+  top: -12vw;
+  left: -6vw;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.4), transparent 68%);
+  animation: drift-a 26s var(--ease) infinite alternate;
+}
+
+.aurora-b {
+  width: 40vw;
+  height: 40vw;
+  min-width: 280px;
+  min-height: 280px;
+  top: 6vh;
+  right: -10vw;
+  background: radial-gradient(circle, rgba(94, 234, 212, 0.22), transparent 68%);
+  animation: drift-b 32s var(--ease) infinite alternate;
+}
+
+.aurora-c {
+  width: 52vw;
+  height: 52vw;
+  min-width: 320px;
+  min-height: 320px;
+  bottom: -20vw;
+  left: 22vw;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.16), transparent 70%);
+  animation: drift-c 38s var(--ease) infinite alternate;
+}
+
+@keyframes drift-a {
+  to { transform: translate3d(8vw, 6vh, 0) scale(1.15); }
+}
+@keyframes drift-b {
+  to { transform: translate3d(-7vw, 10vh, 0) scale(1.2); }
+}
+@keyframes drift-c {
+  to { transform: translate3d(6vw, -8vh, 0) scale(1.1); }
+}
+
+/* Grid mesh over the aurora — gives the light something to sit behind. */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.6;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(120vw 90vh at 50% 0%, #000 20%, transparent 78%);
+    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+  background-size: 62px 62px;
+  mask-image: radial-gradient(130vw 100vh at 50% 0%, #000 15%, transparent 80%);
+}
+
+/* Film grain. Pure CSS so there is no asset to load. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -50%;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 img {
@@ -127,13 +206,13 @@ input {
 h1,
 h2,
 h3 {
-  line-height: 1.1;
+  line-height: 1.08;
   font-weight: 800;
-  letter-spacing: -0.022em;
+  letter-spacing: -0.028em;
   text-wrap: balance;
 }
 
-h1 { font-size: var(--fs-display); }
+h1 { font-size: var(--fs-display); font-weight: 900; }
 h2 { font-size: var(--fs-h2); }
 h3 { font-size: var(--fs-h3); font-weight: 700; }
 
@@ -153,6 +232,28 @@ a:hover { color: var(--gold-bright); }
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 0.85em;
   letter-spacing: -0.01em;
+}
+
+/* Animated metallic sweep. background-clip:text keeps it a text treatment
+   rather than a box, so it wraps and scales with the heading. */
+.shine {
+  background: linear-gradient(
+    100deg,
+    var(--gold) 0%,
+    var(--gold-bright) 22%,
+    #fffbe8 34%,
+    var(--gold-bright) 46%,
+    var(--gold) 70%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sweep 7s linear infinite;
+}
+
+@keyframes sweep {
+  to { background-position: -250% 0; }
 }
 
 .eyebrow {
@@ -182,6 +283,7 @@ a:hover { color: var(--gold-bright); }
 }
 
 .section {
+  position: relative;
   padding-block: var(--section-y);
   scroll-margin-top: 5rem;
 }
@@ -200,8 +302,15 @@ a:hover { color: var(--gold-bright); }
   margin-inline: auto;
 }
 
-/* Auto-fit grid: the single most important fix. Columns collapse on their own
-   instead of overflowing at a hardcoded track count. */
+/* Hairline that fades at both ends — a softer section divider than a border. */
+.rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--gold-line-strong), transparent);
+}
+
+/* Auto-fit grid: columns collapse on their own instead of overflowing at a
+   hardcoded track count. */
 .grid {
   display: grid;
   gap: var(--gap);
@@ -209,6 +318,15 @@ a:hover { color: var(--gold-bright); }
 }
 
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); }
+
+/* Reveal wrappers sit between the grid and the card, so height has to be passed
+   through them or cards in the same row stop matching. */
+.grid > *,
+.grid > * > .card,
+.stages > *,
+.stages > * > .card {
+  height: 100%;
+}
 
 .stack { display: flex; flex-direction: column; gap: 1rem; }
 .row {
@@ -228,17 +346,42 @@ a:hover { color: var(--gold-bright); }
 /* -------------------------------------------------------------------- cards */
 
 .card {
-  background: linear-gradient(160deg, var(--surface-raised), var(--surface));
-  border: 1px solid var(--gold-line);
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(160deg, var(--glass-strong), transparent 45%),
+    linear-gradient(160deg, var(--surface-raised), var(--surface));
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: clamp(1.25rem, 1rem + 1vw, 1.85rem);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.25s var(--ease), transform 0.25s var(--ease);
+  transition: border-color 0.3s var(--ease), transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out);
 }
 
+/* Cursor-tracked spotlight. --mx/--my are written by useSpotlight; when the
+   hook never fires (touch, keyboard) the layer simply stays at 0 opacity. */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+  background: radial-gradient(
+    22rem 22rem at var(--mx, 50%) var(--my, 0%),
+    rgba(212, 175, 55, 0.13),
+    transparent 70%
+  );
+}
+
+.card:hover::before { opacity: 1; }
+
 .card-hover:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   border-color: var(--gold-line-strong);
+  box-shadow: var(--shadow-glow);
 }
 
 .card-icon {
@@ -251,11 +394,18 @@ a:hover { color: var(--gold-bright); }
   background: var(--gold-soft);
   border: 1px solid var(--gold-line);
   color: var(--gold);
+  transition: transform 0.35s var(--ease-out), background 0.3s var(--ease);
+}
+
+.card-hover:hover .card-icon {
+  transform: translateY(-2px) rotate(-4deg) scale(1.06);
 }
 
 /* ------------------------------------------------------------------ buttons */
 
 .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -267,31 +417,52 @@ a:hover { color: var(--gold-bright); }
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s var(--ease), border-color 0.2s var(--ease),
-    transform 0.15s var(--ease), opacity 0.2s var(--ease);
+    transform 0.18s var(--ease-out), opacity 0.2s var(--ease),
+    box-shadow 0.25s var(--ease);
   white-space: nowrap;
 }
+
+/* Sheen that crosses the button on hover. */
+.btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  transition: left 0.55s var(--ease-out);
+  pointer-events: none;
+}
+
+.btn:not(:disabled):hover::after { left: 130%; }
 
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.btn:not(:disabled):active { transform: translateY(1px); }
+.btn:not(:disabled):hover { transform: translateY(-2px); }
+.btn:not(:disabled):active { transform: translateY(0); }
 
 .btn-primary {
-  background: var(--gold);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold) 55%, #b8912a);
   color: #14100a;
+  box-shadow: 0 8px 24px -10px rgba(212, 175, 55, 0.8);
 }
-.btn-primary:not(:disabled):hover { background: var(--gold-bright); }
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 14px 34px -10px rgba(212, 175, 55, 0.95);
+}
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: var(--line);
+  background: var(--glass);
+  border-color: var(--line-bright);
   color: var(--text);
 }
 .btn-ghost:not(:disabled):hover {
   border-color: var(--gold-line-strong);
-  background: rgba(212, 175, 55, 0.06);
+  background: rgba(212, 175, 55, 0.08);
 }
 
 .btn-block { width: 100%; }
@@ -303,6 +474,7 @@ a:hover { color: var(--gold-bright); }
   border-color: var(--line);
   color: var(--text-muted);
 }
+.btn-icon::after { display: none; }
 .btn-icon:hover { color: var(--gold); border-color: var(--gold-line-strong); }
 
 /* ------------------------------------------------------------------- inputs */
@@ -325,14 +497,18 @@ a:hover { color: var(--gold-bright); }
   border-radius: 11px;
   font-size: var(--fs-small);
   outline: none;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    background 0.2s var(--ease);
 }
 
 .input::placeholder { color: var(--text-faint); }
 
+.input:hover:not(:disabled) { border-color: var(--line-bright); }
+
 .input:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.14);
+  background: rgba(212, 175, 55, 0.035);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.16);
 }
 
 .input:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -352,7 +528,7 @@ a:hover { color: var(--gold-bright); }
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.8rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--gold-line);
   background: rgba(212, 175, 55, 0.05);
@@ -360,20 +536,47 @@ a:hover { color: var(--gold-bright); }
   font-size: var(--fs-micro);
   font-weight: 600;
   white-space: nowrap;
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease),
+    transform 0.25s var(--ease-out);
+}
+
+.pill:hover {
+  border-color: var(--gold-line-strong);
+  background: rgba(212, 175, 55, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Live indicator dot for the hero badge. */
+.dot-live {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 0 0 rgba(94, 234, 212, 0.6);
+  animation: ping 2.2s var(--ease) infinite;
+}
+
+@keyframes ping {
+  70% { box-shadow: 0 0 0 7px rgba(94, 234, 212, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(94, 234, 212, 0); }
 }
 
 .status {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--glass);
   font-size: var(--fs-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
 .status-idle { color: var(--text-faint); }
-.status-active { color: var(--gold); }
-.status-done { color: var(--success); }
-.status-error { color: var(--danger); }
+.status-active { color: var(--gold); border-color: var(--gold-line-strong); background: var(--gold-soft); }
+.status-done { color: var(--success); border-color: rgba(74, 222, 128, 0.3); background: var(--success-soft); }
+.status-error { color: var(--danger); border-color: rgba(248, 113, 113, 0.3); background: var(--danger-soft); }
 
 /* ------------------------------------------------------------ data readouts */
 
@@ -382,7 +585,9 @@ a:hover { color: var(--gold-bright); }
   border: 1px solid var(--line);
   border-radius: 13px;
   padding: 0.9rem 1rem;
+  transition: border-color 0.25s var(--ease);
 }
+.readout:hover { border-color: var(--gold-line); }
 
 .readout-value {
   font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -439,11 +644,13 @@ a:hover { color: var(--gold-bright); }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--surface-inset); }
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.35);
+  background: linear-gradient(var(--gold), #8f6f1d);
   border-radius: var(--radius-pill);
   border: 2px solid var(--surface-inset);
 }
-::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-bright); }
+
+::selection { background: rgba(212, 175, 55, 0.28); color: #fff; }
 
 /* ============================================================================
    Components
@@ -455,9 +662,27 @@ a:hover { color: var(--gold-bright); }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(5, 5, 5, 0.82);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--line);
+  background: rgba(5, 5, 7, 0.6);
+  backdrop-filter: blur(18px) saturate(140%);
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.nav-scrolled {
+  background: rgba(5, 5, 7, 0.86);
+  border-bottom-color: var(--line);
+  box-shadow: 0 10px 30px -20px rgba(0, 0, 0, 0.9);
+}
+
+/* Reading-progress rail across the very bottom edge of the bar. */
+.nav-progress {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
 }
 
 .nav-inner {
@@ -466,30 +691,69 @@ a:hover { color: var(--gold-bright); }
   justify-content: space-between;
   gap: 1rem;
   padding-block: 0.85rem;
+  transition: padding 0.3s var(--ease);
 }
 
+.nav-scrolled .nav-inner { padding-block: 0.6rem; }
+
 .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   background: none;
   border: 0;
   cursor: pointer;
   font-size: 1.3rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   color: var(--text);
 }
 
-.nav-links { display: none; gap: 2rem; }
+.nav-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: linear-gradient(140deg, var(--gold-soft), transparent);
+  border: 1px solid var(--gold-line);
+  color: var(--gold);
+  transition: transform 0.4s var(--ease-out), box-shadow 0.3s var(--ease);
+}
+
+.nav-brand:hover .nav-mark {
+  transform: rotate(-8deg) scale(1.06);
+  box-shadow: 0 0 18px -4px rgba(212, 175, 55, 0.6);
+}
+
+.nav-links { display: none; gap: 0.35rem; }
 
 .nav-link {
+  position: relative;
   background: none;
   border: 0;
   cursor: pointer;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
   color: var(--text-muted);
   font-size: var(--fs-small);
   font-weight: 600;
-  transition: color 0.2s var(--ease);
+  transition: color 0.2s var(--ease), background 0.2s var(--ease);
 }
-.nav-link:hover { color: var(--gold); }
+.nav-link:hover { color: var(--text); background: var(--glass); }
+
+.nav-link-active { color: var(--gold); }
+.nav-link-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0.05rem;
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  background: var(--gold);
+}
 
 .nav-actions { display: flex; align-items: center; gap: 0.6rem; }
 .nav-cta { display: none; }
@@ -501,7 +765,8 @@ a:hover { color: var(--gold-bright); }
   gap: 0.4rem;
   padding: 1rem var(--page-x) 1.5rem;
   border-top: 1px solid var(--line);
-  background: var(--surface);
+  background: rgba(11, 11, 16, 0.97);
+  backdrop-filter: blur(18px);
 }
 
 .nav-drawer-link {
@@ -513,8 +778,10 @@ a:hover { color: var(--gold-bright); }
   color: var(--text);
   font-size: 1rem;
   font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  transition: color 0.2s var(--ease), padding-left 0.2s var(--ease);
 }
-.nav-drawer-link:hover { color: var(--gold); }
+.nav-drawer-link:hover { color: var(--gold); padding-left: 0.35rem; }
 
 @media (min-width: 62rem) {
   .nav-links { display: flex; }
@@ -526,12 +793,17 @@ a:hover { color: var(--gold-bright); }
 /* ------------------------------------------------------------------ hero --*/
 
 .hero {
-  padding-block: clamp(3rem, 1.5rem + 7vw, 7rem);
-  border-bottom: 1px solid var(--line);
+  position: relative;
+  padding-block: clamp(3.5rem, 1.5rem + 8vw, 8rem);
+  /* The orbits rotate, and a rotated square's *bounding box* is wider than the
+     square itself, which is enough to give the page a horizontal scrollbar even
+     though nothing visible overflows. `clip` contains it without creating a
+     scroll container the way `hidden` would. */
+  overflow-x: clip;
 }
 
 /* Single column by default; the two-up layout only applies once there is
-   genuinely room for it. The old `1.05fr .95fr` applied at every width. */
+   genuinely room for it. */
 .hero-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -543,19 +815,102 @@ a:hover { color: var(--gold-bright); }
 .hero-actions { gap: 0.75rem; margin-top: 0.5rem; }
 .hero-badges { gap: 0.5rem; }
 
-.hero-art { order: -1; display: flex; justify-content: center; }
+.hero h1 { text-wrap: balance; }
+
+/* A deliberately square stage: `border-radius: 50%` on the orbits only draws a
+   circle if the box they are inset within is itself square, and aspect-ratio is
+   what guarantees that at every viewport width. */
+.hero-art {
+  order: -1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 30rem);
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
 
 .hero-art img {
-  width: min(100%, 30rem);
-  border-radius: var(--radius-lg);
+  position: relative;
+  z-index: 2;
+  width: min(84%, 24rem);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--gold-line);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), 0 0 70px -18px rgba(212, 175, 55, 0.55);
+}
+
+/* Concentric orbits behind the art. Decorative only — aria-hidden in markup. */
+.orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid var(--gold-line);
+  pointer-events: none;
+}
+
+.orbit-1 {
+  inset: 6%;
+  border-style: dashed;
+  opacity: 0.4;
+  animation: spin 46s linear infinite;
+}
+
+.orbit-2 {
+  inset: -2%;
+  border-color: rgba(94, 234, 212, 0.18);
+  animation: spin 34s linear infinite reverse;
+}
+
+/* The travelling node on the outer orbit. */
+.orbit-2::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 14px 2px rgba(94, 234, 212, 0.75);
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 1px;
+  margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.hero-stat {
+  background: var(--surface);
+  padding: 1.15rem 1.25rem;
+  transition: background 0.25s var(--ease);
+}
+.hero-stat:hover { background: rgba(212, 175, 55, 0.05); }
+
+.hero-stat b {
+  display: block;
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--gold);
+  line-height: 1.2;
+}
+
+.hero-stat span {
+  font-size: var(--fs-micro);
+  color: var(--text-faint);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 @media (min-width: 60rem) {
   .hero-grid { grid-template-columns: 1.1fr 0.9fr; }
   .hero-art { order: 0; }
-  .hero-art img { width: 100%; }
 }
 
 /* --------------------------------------------------------------- compare --*/
@@ -571,6 +926,9 @@ a:hover { color: var(--gold-bright); }
 }
 
 .compare-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: var(--fs-micro);
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -579,11 +937,29 @@ a:hover { color: var(--gold-bright); }
 .compare-label-problem { color: var(--danger); }
 .compare-label-solution { color: var(--success); }
 
+.compare-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.25;
+}
+
 .compare-item {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
 }
+
+/* Tone the spotlight to match the column. */
+.compare-item-problem::before {
+  background: radial-gradient(22rem 22rem at var(--mx, 50%) var(--my, 0%), rgba(248, 113, 113, 0.12), transparent 70%);
+}
+.compare-item-solution::before {
+  background: radial-gradient(22rem 22rem at var(--mx, 50%) var(--my, 0%), rgba(74, 222, 128, 0.11), transparent 70%);
+}
+.compare-item-problem.card-hover:hover { border-color: rgba(248, 113, 113, 0.4); box-shadow: 0 20px 60px -20px rgba(248, 113, 113, 0.28); }
+.compare-item-solution.card-hover:hover { border-color: rgba(74, 222, 128, 0.4); box-shadow: 0 20px 60px -20px rgba(74, 222, 128, 0.26); }
 
 .card-icon-problem {
   background: var(--danger-soft);
@@ -602,7 +978,8 @@ a:hover { color: var(--gold-bright); }
 /* -------------------------------------------------------------- protocol --*/
 
 .protocol {
-  background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.03), transparent);
+  position: relative;
+  background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.035), transparent);
   border-block: 1px solid var(--line);
 }
 
@@ -618,14 +995,36 @@ a:hover { color: var(--gold-bright); }
   flex-direction: column;
   gap: 1.1rem;
   align-items: flex-start;
+  overflow: hidden;
 }
 
-.stage-index {
-  font-size: 1.6rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.08);
-  line-height: 1;
+/* Progress sliver along the top edge of each stage card. */
+.stage::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+  transition: transform 0.5s var(--ease-out);
 }
+
+.stage:hover::after { transform: scaleX(1); }
+
+.stage-index {
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.13);
+  line-height: 1;
+  transition: -webkit-text-stroke-color 0.3s var(--ease);
+}
+
+.stage:hover .stage-index { -webkit-text-stroke-color: var(--gold-line-strong); }
 
 .stage-sub {
   font-size: var(--fs-micro);
@@ -638,9 +1037,33 @@ a:hover { color: var(--gold-bright); }
 .stage p { font-size: var(--fs-small); }
 .stage-tech { margin-top: auto; }
 
-.stack-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); }
+/* ------------------------------------------------------------- tech stack */
+
+/* Edge-to-edge marquee. The track holds two identical runs of the list, so
+   translating it by exactly -50% loops seamlessly. */
+.marquee {
+  position: relative;
+  overflow: hidden;
+  padding-block: 0.5rem;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  gap: var(--gap);
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
 
 .tech {
+  flex: none;
+  width: 11rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -649,8 +1072,66 @@ a:hover { color: var(--gold-bright); }
   padding-block: 1.6rem;
 }
 .tech p { font-size: var(--fs-micro); }
+.tech img { transition: transform 0.35s var(--ease-out); }
+.tech:hover img { transform: translateY(-3px) scale(1.1); }
 
 /* ----------------------------------------------------------------- steps --*/
+
+/* The tracker sticks across the whole pipeline, so both share one wrapper. */
+.pipeline {
+  max-width: 54rem;
+  margin-inline: auto;
+}
+
+/* Sticky progress tracker for the vault pipeline. */
+.tracker {
+  position: sticky;
+  top: 4.25rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(11, 11, 16, 0.88);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px -24px rgba(0, 0, 0, 1);
+}
+
+.tracker-bar {
+  position: relative;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+
+.tracker-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 50%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+}
+
+.tracker-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--text-faint);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tracker-labels::-webkit-scrollbar { display: none; }
+
+.tracker-label { white-space: nowrap; transition: color 0.25s var(--ease); }
+.tracker-label-done { color: var(--success); }
+.tracker-label-active { color: var(--gold); }
 
 .steps {
   list-style: none;
@@ -663,8 +1144,7 @@ a:hover { color: var(--gold-bright); }
 
 .step { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
 
-/* The connector rail is desktop-only; on narrow screens the cards simply stack,
-   which is why the old fixed 9-column pipeline had to go. */
+/* The connector rail is desktop-only; on narrow screens the cards simply stack. */
 .step-rail { display: none; }
 
 @media (min-width: 48rem) {
@@ -680,14 +1160,20 @@ a:hover { color: var(--gold-bright); }
   .step-rail::after {
     content: "";
     flex: 1;
-    width: 1px;
-    background: linear-gradient(var(--gold-line), transparent);
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(var(--line-bright), transparent);
+  }
+
+  .step-done .step-rail::after {
+    background: linear-gradient(rgba(74, 222, 128, 0.6), transparent);
   }
 
   .step:last-child .step-rail::after { display: none; }
 }
 
 .step-dot {
+  position: relative;
   display: grid;
   place-items: center;
   width: 2.25rem;
@@ -699,24 +1185,45 @@ a:hover { color: var(--gold-bright); }
   font-weight: 700;
   color: var(--text-faint);
   flex: none;
+  transition: color 0.3s var(--ease), border-color 0.3s var(--ease),
+    background 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
 
-.step-dot-active { color: var(--gold); border-color: var(--gold); }
-.step-dot-running { color: var(--gold); border-color: var(--gold); }
+.step-dot-idle { color: var(--gold); border-color: var(--gold-line-strong); }
+
+.step-dot-running {
+  color: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.12);
+  animation: pulse-ring 1.8s var(--ease) infinite;
+}
+
+@keyframes pulse-ring {
+  50% { box-shadow: 0 0 0 9px rgba(212, 175, 55, 0); }
+}
+
 .step-dot-done {
   color: var(--success);
   border-color: var(--success);
   background: var(--success-soft);
+  box-shadow: 0 0 18px -6px rgba(74, 222, 128, 0.8);
 }
 .step-dot-error { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
 .step-dot-locked { color: var(--text-faint); border-color: var(--line); }
 
 .step-body { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.step-running .step-body { border-color: var(--gold-line-strong); }
 .step-done .step-body { border-color: rgba(74, 222, 128, 0.28); }
+.step-error .step-body { border-color: rgba(248, 113, 113, 0.3); }
+
+/* Locked cards recede rather than disappear, so the sequence stays legible. */
+.step-locked-card .step-body { opacity: 0.6; }
+.step-locked-card:hover .step-body { opacity: 0.85; }
 
 .step-desc { font-size: var(--fs-small); }
 
-.step-error {
+.step-error-msg {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -728,9 +1235,9 @@ a:hover { color: var(--gold-bright); }
   font-size: var(--fs-small);
   line-height: 1.5;
 }
-.step-error svg { flex: none; margin-top: 0.15rem; }
+.step-error-msg svg { flex: none; margin-top: 0.15rem; }
 
-.step-locked {
+.step-lock-note {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -747,9 +1254,11 @@ a:hover { color: var(--gold-bright); }
 /* ---------------------------------------------------------------- footer --*/
 
 .footer {
+  position: relative;
   border-top: 1px solid var(--line);
   padding-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
   margin-top: var(--section-y);
+  background: linear-gradient(180deg, transparent, rgba(212, 175, 55, 0.03));
 }
 
 .footer-inner {
@@ -761,7 +1270,14 @@ a:hover { color: var(--gold-bright); }
   padding-bottom: 2rem;
 }
 
-.footer-brand { font-size: 1.2rem; font-weight: 800; color: var(--text); }
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+}
 .footer-note { font-size: var(--fs-small); max-width: 44ch; }
 .footer-links { gap: 0.6rem; }
 
@@ -769,4 +1285,33 @@ a:hover { color: var(--gold-bright); }
   border-top: 1px solid var(--line);
   padding-block: 1.25rem;
   font-size: var(--fs-micro);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Back-to-top affordance. */
+.to-top {
+  position: fixed;
+  right: clamp(1rem, 2vw, 2rem);
+  bottom: clamp(1rem, 2vw, 2rem);
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--gold-line);
+  background: rgba(11, 11, 16, 0.85);
+  backdrop-filter: blur(10px);
+  color: var(--gold);
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out), border-color 0.25s var(--ease),
+    box-shadow 0.25s var(--ease);
+}
+.to-top:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold-line-strong);
+  box-shadow: 0 0 22px -6px rgba(212, 175, 55, 0.7);
 }
