@@ -1,113 +1,88 @@
-import { ArrowDownToLine, BadgeCheck, Cpu, Fingerprint, LockKeyhole, WalletCards } from "lucide-react";
+import Reveal from "../ui/Reveal";
+import Scramble from "../ui/Scramble";
 
 const STAGES = [
   {
-    icon: WalletCards,
     title: "Deposit",
-    subtitle: "Vault entry",
     text: "A commitment is recorded against a write-once deposit ID.",
     tech: "Stellar",
   },
   {
-    icon: Fingerprint,
     title: "Commitment",
-    subtitle: "Hide ownership",
     text: "Poseidon2(secret, depositId) replaces any public record of who owns it.",
     tech: "Poseidon2",
   },
   {
-    icon: Cpu,
-    title: "ZK proof",
-    subtitle: "Prove privately",
+    title: "Proof",
     text: "A Noir circuit proves you can open the commitment without revealing the secret.",
     tech: "Noir · UltraHonk",
   },
   {
-    icon: BadgeCheck,
     title: "Verify",
-    subtitle: "On-chain check",
     text: "The Soroban verifier runs the pairing check against its stored key.",
     tech: "Soroban",
   },
   {
-    icon: ArrowDownToLine,
     title: "Withdraw",
-    subtitle: "Private exit",
     text: "The nullifier is burned, so the proof can never be replayed.",
     tech: "Nullifier",
   },
 ];
 
 const STACK = [
-  { name: "Stellar", type: "Blockchain", slug: "stellar" },
-  { name: "Rust", type: "Smart contracts", slug: "rust" },
-  { name: "Noir", type: "ZK circuits", slug: "aztec" },
-  { name: "React", type: "Frontend", slug: "react" },
-  { name: "Node.js", type: "Backend", slug: "nodedotjs" },
-  { name: "Vite", type: "Build", slug: "vite" },
+  { name: "Stellar", slug: "stellar" },
+  { name: "Rust", slug: "rust" },
+  { name: "Noir", slug: "aztec" },
+  { name: "React", slug: "react" },
+  { name: "Node.js", slug: "nodedotjs" },
+  { name: "Vite", slug: "vite" },
 ];
 
 export default function Protocol() {
   return (
-    <section id="flow" className="section protocol">
+    <section id="flow" className="section">
       <div className="shell">
-        <div className="section-head center">
-          <p className="eyebrow">
-            <LockKeyhole size={14} />
-            ShadowVault protocol
-          </p>
-          <h2>
-            From deposit to <span className="gold">private withdrawal</span>
-          </h2>
-          <p className="lede">One ownership lifecycle, five cryptographic and on-chain stages.</p>
-        </div>
+        <Reveal className="sec-head">
+          <span className="label">[03] — Protocol</span>
+          <h2>One lifecycle, five stages.</h2>
+        </Reveal>
 
-        {/* Auto-fit grid rather than a fixed 9-column track, so the stages wrap
-            instead of overflowing the viewport on anything under a wide desktop. */}
-        <ol className="stages">
+        {/* A table rather than a card grid: five ordered steps are a list, and
+            drawing them as one keeps the eye moving down instead of scanning. */}
+        <Reveal as="ol" className="stages">
           {STAGES.map((stage, index) => (
-            <li key={stage.title} className="card card-hover stage">
-              <div className="row-between">
-                <span className="eyebrow">Stage {String(index + 1).padStart(2, "0")}</span>
-                <span className="stage-index" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-              </div>
-
-              <span className="card-icon">
-                <stage.icon size={20} strokeWidth={1.8} />
+            <li key={stage.title} className="stage">
+              <span className="stage-i">{String(index + 1).padStart(2, "0")}</span>
+              <h3>{stage.title}</h3>
+              <p>{stage.text}</p>
+              <span className="stage-tech">
+                <Scramble text={stage.tech} trigger="hover" speed={20} />
               </span>
-
-              <div className="stack" style={{ gap: "0.35rem" }}>
-                <p className="stage-sub">{stage.subtitle}</p>
-                <h3>{stage.title}</h3>
-                <p>{stage.text}</p>
-              </div>
-
-              <span className="pill stage-tech">{stage.tech}</span>
             </li>
           ))}
-        </ol>
+        </Reveal>
+      </div>
 
-        <div className="section-head center" style={{ marginTop: "var(--section-y)" }}>
-          <p className="eyebrow">Built with</p>
-          <h2>The stack underneath</h2>
-        </div>
-
-        <div className="grid stack-grid">
-          {STACK.map((item) => (
-            <article key={item.name} className="card card-hover tech">
+      {/* Full-bleed on purpose — it reads as a band across the page. */}
+      <div className="marquee" style={{ marginTop: "var(--sec)" }}>
+        <div className="marquee-track">
+          {[...STACK, ...STACK].map((item, index) => (
+            <span
+              /* The second run is a visual duplicate, so index is the key. */
+              key={`${item.name}-${index}`}
+              className="brand"
+              aria-hidden={index >= STACK.length}
+            >
               <img
-                src={`https://cdn.simpleicons.org/${item.slug}/d4af37`}
+                src={`https://cdn.simpleicons.org/${item.slug}/ffffff`}
                 alt=""
                 aria-hidden="true"
-                width="36"
-                height="36"
+                width="18"
+                height="18"
                 loading="lazy"
               />
-              <h3>{item.name}</h3>
-              <p className="faint">{item.type}</p>
-            </article>
+              {item.name}
+            </span>
           ))}
         </div>
       </div>
