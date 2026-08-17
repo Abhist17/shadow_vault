@@ -1,30 +1,33 @@
-import { motion, useScroll } from "framer-motion";
-import { Menu, ShieldCheck, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useScrollSpy } from "../../hooks/useScrollSpy";
+import mark from "../../assets/sv1.jpeg";
 
 const LINKS = [
-  { id: "about", label: "Why" },
-  { id: "features", label: "Features" },
+  { id: "why", label: "Why" },
+  { id: "features", label: "Design" },
   { id: "flow", label: "Protocol" },
   { id: "vault", label: "Vault" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  // Reading progress for the hairline under the bar. useScroll is driven by a
-  // motion value, so the bar animates without re-rendering the navbar.
-  const { scrollYProgress } = useScroll();
+  const [stuck, setStuck] = useState(false);
+  const bar = useRef(null);
 
   const ids = useMemo(() => LINKS.map((link) => link.id), []);
   const active = useScrollSpy(ids);
 
+  // One scroll listener drives both the stuck state and the progress rule. The
+  // rule is written straight to the transform so progress never re-renders.
   useEffect(() => {
     function onScroll() {
-      setScrolled(window.scrollY > 16);
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = max > 0 ? window.scrollY / max : 0;
+
+      if (bar.current) bar.current.style.transform = `scaleX(${progress})`;
+      setStuck(window.scrollY > 8);
     }
 
     onScroll();
@@ -32,7 +35,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Lock scroll behind the mobile drawer so the page cannot move underneath it.
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -46,20 +48,18 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
+    <header className={`nav ${stuck ? "nav-stuck" : ""}`}>
       <div className="nav-inner shell">
         <button className="nav-brand" onClick={() => go("top")}>
-          <span className="nav-mark" aria-hidden="true">
-            <ShieldCheck size={16} />
-          </span>
-          Shadow<span className="gold">Vault</span>
+          <img src={mark} alt="" aria-hidden="true" />
+          ShadowVault
         </button>
 
         <nav className="nav-links" aria-label="Sections">
           {LINKS.map((link) => (
             <button
               key={link.id}
-              className={`nav-link ${active === link.id ? "nav-link-active" : ""}`}
+              className={`nav-link ${active === link.id ? "nav-link-on" : ""}`}
               onClick={() => go(link.id)}
               aria-current={active === link.id ? "true" : undefined}
             >
@@ -68,47 +68,40 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="nav-actions">
+        <div className="nav-right">
           <button className="btn btn-primary nav-cta" onClick={() => go("vault")}>
-            <ShieldCheck size={16} />
-            Launch vault
+            Open vault
           </button>
 
           <button
-            className="btn btn-icon nav-toggle"
+            className="btn btn-icon nav-burger"
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
           >
-            {open ? <X size={20} /> : <Menu size={20} />}
+            {open ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </div>
 
-      <motion.div className="nav-progress" style={{ scaleX: scrollYProgress }} aria-hidden="true" />
+      <span ref={bar} className="nav-bar" aria-hidden="true" />
 
       {open && (
-        <motion.div
-          className="nav-drawer"
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
+        <div className="nav-sheet">
           {LINKS.map((link) => (
-            <button key={link.id} className="nav-drawer-link" onClick={() => go(link.id)}>
+            <button key={link.id} onClick={() => go(link.id)}>
               {link.label}
             </button>
           ))}
 
           <button
             className="btn btn-primary btn-block"
-            style={{ marginTop: "0.75rem" }}
+            style={{ marginTop: "1.25rem" }}
             onClick={() => go("vault")}
           >
-            <ShieldCheck size={16} />
-            Launch vault
+            Open vault
           </button>
-        </motion.div>
+        </div>
       )}
     </header>
   );

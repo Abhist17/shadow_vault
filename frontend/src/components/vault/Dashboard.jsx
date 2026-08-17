@@ -1,12 +1,3 @@
-import {
-  ArrowDownToLine,
-  BadgeCheck,
-  Cpu,
-  Fingerprint,
-  RotateCcw,
-  Wallet,
-} from "lucide-react";
-
 import { useVault } from "../../context/useVault";
 import Reveal from "../ui/Reveal";
 import CopyField from "./CopyField";
@@ -21,20 +12,18 @@ export default function Dashboard() {
 
   return (
     <section id="vault" className="section shell">
-      <Reveal className="section-head center">
-        <p className="eyebrow">Vault control panel</p>
-        <h2>
-          Run the <span className="shine">private ownership</span> flow
-        </h2>
+      <Reveal className="sec-head">
+        <span className="label">[04] — Vault</span>
+        <h2>Run the flow.</h2>
         <p className="lede">
-          Each stage feeds the next: the commitment binds your secret to a deposit, the proof opens
-          that commitment without revealing it, and the vault only releases funds once the verifier
+          Each stage feeds the next. The commitment binds your secret to a deposit, the proof opens
+          that commitment without revealing it, and the vault releases nothing until the verifier
           contract accepts the proof on-chain.
         </p>
       </Reveal>
 
-      {/* The tracker sticks within this wrapper, so it has to span the whole
-          pipeline — sticky has no range inside a box its own height. */}
+      {/* Tracker and steps share one wrapper so the sticky element has a range
+          to travel — sticky does nothing inside a box its own height. */}
       <div className="pipeline">
         <Tracker status={status} />
 
@@ -47,29 +36,28 @@ export default function Dashboard() {
             error={error.commit}
             action={
               <button
-                className="btn btn-primary btn-block"
+                className="btn btn-primary"
                 onClick={actions.commit}
                 disabled={disabled || !canRun.commit}
               >
-                <Fingerprint size={16} />
                 {status.commit === "done" ? "Re-derive commitment" : "Derive commitment"}
               </button>
             }
           >
-            <div className="grid" style={{ marginBlock: "1.1rem" }}>
+            <div className="step-fields">
               <div className="field">
                 <label htmlFor="secret">Secret</label>
                 <input
                   id="secret"
                   className="input"
                   type="password"
-                  placeholder="Any passphrase or number"
+                  placeholder="passphrase or number"
                   value={inputs.secret}
                   onChange={(event) => setInput("secret", event.target.value)}
                   disabled={disabled}
                   autoComplete="off"
                 />
-                <span className="field-hint">Kept client-side and in memory only. Do not lose it.</span>
+                <span className="hint">Client-side and in memory only. Do not lose it.</span>
               </div>
 
               <div className="field">
@@ -78,12 +66,12 @@ export default function Dashboard() {
                   id="depositId"
                   className="input"
                   inputMode="numeric"
-                  placeholder="e.g. 1042"
+                  placeholder="1042"
                   value={inputs.depositId}
                   onChange={(event) => setInput("depositId", event.target.value)}
                   disabled={disabled}
                 />
-                <span className="field-hint">Write-once. Each ID can be deposited to a single time.</span>
+                <span className="hint">Write-once. One deposit per ID.</span>
               </div>
 
               <div className="field">
@@ -96,14 +84,14 @@ export default function Dashboard() {
                   onChange={(event) => setInput("amount", event.target.value)}
                   disabled={disabled}
                 />
-                <span className="field-hint">Recorded alongside the commitment.</span>
+                <span className="hint">Recorded with the commitment.</span>
               </div>
             </div>
 
             {commitment && (
-              <div className="stack" style={{ marginBottom: "1.1rem" }}>
-                <CopyField label="Commitment — Poseidon2(secret, depositId)" value={commitment} />
-                <CopyField label="Nullifier — Poseidon2(secret)" value={nullifier} />
+              <div className="stack" style={{ gap: "0.75rem" }}>
+                <CopyField label="commitment — poseidon2(secret, depositId)" value={commitment} />
+                <CopyField label="nullifier — poseidon2(secret)" value={nullifier} />
               </div>
             )}
           </StepCard>
@@ -115,14 +103,13 @@ export default function Dashboard() {
             status={status.deposit}
             error={error.deposit}
             locked={!canRun.deposit}
-            lockedReason="Derive a commitment first."
+            lockedReason="Derive a commitment first"
             action={
               <button
-                className="btn btn-primary btn-block"
+                className="btn btn-primary"
                 onClick={actions.deposit}
                 disabled={disabled || !canRun.deposit || status.deposit === "done"}
               >
-                <Wallet size={16} />
                 {status.deposit === "done" ? "Recorded on-chain" : "Deposit to Stellar"}
               </button>
             }
@@ -130,36 +117,35 @@ export default function Dashboard() {
 
           <StepCard
             index={3}
-            title="Generate ZK proof"
+            title="Generate proof"
             description="Noir builds a witness from your secret and Barretenberg produces an UltraHonk proof that you can open the commitment."
             status={status.prove}
             error={error.prove}
             locked={!canRun.prove}
-            lockedReason="Record the deposit on-chain first."
+            lockedReason="Record the deposit on-chain first"
             action={
               <button
-                className="btn btn-primary btn-block"
+                className="btn btn-primary"
                 onClick={actions.prove}
                 disabled={disabled || !canRun.prove}
               >
-                <Cpu size={16} />
                 {status.prove === "done" ? "Regenerate proof" : "Generate proof"}
               </button>
             }
           >
             {proof && (
-              <dl className="readout" style={{ marginBottom: "1.1rem" }}>
+              <dl className="hash" style={{ padding: "0.35rem 0.85rem" }}>
                 <div className="kv">
-                  <dt>Proof size</dt>
-                  <dd className="mono">{proof.bytes.toLocaleString()} bytes</dd>
+                  <dt>proof_size</dt>
+                  <dd>{proof.bytes.toLocaleString()} bytes</dd>
                 </div>
                 <div className="kv">
-                  <dt>Proving time</dt>
-                  <dd className="mono">{proof.elapsedMs} ms</dd>
+                  <dt>elapsed</dt>
+                  <dd>{proof.elapsedMs} ms</dd>
                 </div>
                 <div className="kv">
-                  <dt>Scheme</dt>
-                  <dd>UltraHonk · keccak oracle</dd>
+                  <dt>scheme</dt>
+                  <dd>ultrahonk · keccak</dd>
                 </div>
               </dl>
             )}
@@ -168,18 +154,17 @@ export default function Dashboard() {
           <StepCard
             index={4}
             title="Verify on-chain"
-            description="The Soroban verifier checks the proof against the verification key baked in at deployment. This is a real pairing check, not a mock."
+            description="The Soroban verifier checks the proof against the verification key baked in at deployment. A real pairing check, not a mock."
             status={status.verify}
             error={error.verify}
             locked={!canRun.verify}
-            lockedReason="Generate a proof first."
+            lockedReason="Generate a proof first"
             action={
               <button
-                className="btn btn-primary btn-block"
+                className="btn btn-primary"
                 onClick={actions.verify}
                 disabled={disabled || !canRun.verify}
               >
-                <BadgeCheck size={16} />
                 {status.verify === "done" ? "Verify again" : "Verify on Soroban"}
               </button>
             }
@@ -192,26 +177,24 @@ export default function Dashboard() {
             status={status.withdraw}
             error={error.withdraw}
             locked={!canRun.withdraw}
-            lockedReason="Verify the proof first."
+            lockedReason="Verify the proof first"
             action={
               <button
-                className="btn btn-primary btn-block"
+                className="btn btn-primary"
                 onClick={actions.withdraw}
                 disabled={disabled || !canRun.withdraw || status.withdraw === "done"}
               >
-                <ArrowDownToLine size={16} />
                 {status.withdraw === "done" ? "Withdrawn" : "Withdraw funds"}
               </button>
             }
           />
         </ol>
-      </div>
 
-      <div className="row" style={{ justifyContent: "center", marginTop: "2.5rem" }}>
-        <button className="btn btn-ghost" onClick={reset} disabled={disabled}>
-          <RotateCcw size={15} />
-          Reset flow
-        </button>
+        <div className="row" style={{ marginTop: "2rem" }}>
+          <button className="btn btn-ghost" onClick={reset} disabled={disabled}>
+            Reset flow
+          </button>
+        </div>
       </div>
     </section>
   );

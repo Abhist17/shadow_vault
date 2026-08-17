@@ -1,8 +1,6 @@
-import { motion } from "framer-motion";
-
 import { STEPS } from "../../context/steps";
 
-const LABELS = {
+const NAMES = {
   commit: "Commit",
   deposit: "Deposit",
   prove: "Prove",
@@ -13,45 +11,40 @@ const LABELS = {
 /**
  * Sticky overview of the pipeline.
  *
- * The dashboard is tall enough that the step you are on can scroll out of view,
- * which made it hard to tell how far through the flow you were. This pins that
- * one fact to the top of the section.
+ * The section is tall enough that the step you are on scrolls out of view, so
+ * this pins the one fact you keep wanting: how far through the flow you are.
  */
 export default function Tracker({ status }) {
   const done = STEPS.filter((step) => status[step] === "done").length;
-  const active = STEPS.find((step) => status[step] === "running");
 
   return (
     <div className="tracker">
       <div className="row-between">
-        <span className="eyebrow">Pipeline progress</span>
-        <span className="mono faint">
-          {done} / {STEPS.length} complete
+        <span className="label">Progress</span>
+        <span className="label">
+          {String(done).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")}
         </span>
       </div>
 
-      <div className="tracker-bar">
-        <motion.span
-          className="tracker-fill"
-          initial={false}
-          animate={{ scaleX: done / STEPS.length }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        />
+      <div className="tracker-segs">
+        {STEPS.map((step) => (
+          <span key={step} className={`tracker-seg tracker-seg-${status[step] === "running" ? "active" : status[step]}`} />
+        ))}
       </div>
 
-      <div className="tracker-labels">
+      <div className="tracker-names">
         {STEPS.map((step) => (
           <span
             key={step}
-            className={`tracker-label ${
+            className={`tracker-name ${
               status[step] === "done"
-                ? "tracker-label-done"
-                : step === active
-                  ? "tracker-label-active"
+                ? "tracker-name-done"
+                : status[step] === "running"
+                  ? "tracker-name-active"
                   : ""
             }`}
           >
-            {LABELS[step]}
+            {NAMES[step]}
           </span>
         ))}
       </div>

@@ -1,20 +1,18 @@
 import { AlertCircle, Check, Loader2, Lock } from "lucide-react";
 
-import Reveal from "../ui/Reveal";
-import { useSpotlight } from "../../hooks/useSpotlight";
-
-const STATUS_LABEL = {
+const LABEL = {
   idle: "Ready",
   running: "Working",
-  done: "Complete",
+  done: "Done",
   error: "Failed",
+  locked: "Locked",
 };
 
 /**
  * One stage of the vault pipeline.
  *
- * A locked card stays visible but explains *why* it is locked, so the sequence
- * is legible at a glance rather than something the user discovers by clicking a
+ * A locked step stays in place and dims rather than disappearing, and says why
+ * it is locked — the sequence should be legible by reading, not by clicking a
  * button and getting an error back.
  */
 export default function StepCard({
@@ -28,39 +26,22 @@ export default function StepCard({
   children,
   action,
 }) {
-  const onSpotlight = useSpotlight();
   const state = locked && status === "idle" ? "locked" : status;
 
   return (
-    <Reveal as="li" y={16} className={`step step-${state} ${locked && status === "idle" ? "step-locked-card" : ""}`}>
-      <div className="step-rail" aria-hidden="true">
-        <span className={`step-dot step-dot-${state}`}>
-          {state === "done" ? (
-            <Check size={14} strokeWidth={3} />
-          ) : state === "running" ? (
-            <Loader2 size={14} className="spin" />
-          ) : state === "error" ? (
-            <AlertCircle size={14} />
-          ) : state === "locked" ? (
-            <Lock size={12} />
-          ) : (
-            index
-          )}
-        </span>
-      </div>
+    <li className={`step ${state === "locked" ? "step-locked" : ""}`}>
+      <span className="step-i">{String(index).padStart(2, "0")}</span>
 
-      <div className="card step-body" onMouseMove={onSpotlight}>
+      <div className="step-body">
         <div className="row-between">
-          <div>
-            <p className="eyebrow">Step {String(index).padStart(2, "0")}</p>
-            <h3>{title}</h3>
-          </div>
+          <h3>{title}</h3>
 
-          <span className={`status status-${statusClass(state)}`}>
-            {state === "running" && <Loader2 size={13} className="spin" />}
-            {state === "done" && <Check size={13} strokeWidth={3} />}
+          <span className={`state state-${tone(state)}`}>
+            {state === "running" && <Loader2 size={12} className="spin" />}
+            {state === "done" && <Check size={12} strokeWidth={3} />}
+            {state === "error" && <AlertCircle size={12} />}
             {state === "locked" && <Lock size={11} />}
-            {STATUS_LABEL[state] ?? "Locked"}
+            {LABEL[state]}
           </span>
         </div>
 
@@ -69,26 +50,26 @@ export default function StepCard({
         {children}
 
         {error && (
-          <p className="step-error-msg" role="alert">
-            <AlertCircle size={15} />
+          <p className="step-err" role="alert">
+            <AlertCircle size={14} />
             <span>{error}</span>
           </p>
         )}
 
-        {locked && status === "idle" ? (
-          <p className="step-lock-note">
-            <Lock size={13} />
+        {state === "locked" ? (
+          <p className="step-lock">
+            <Lock size={11} />
             {lockedReason}
           </p>
         ) : (
-          action
+          <div className="step-actions">{action}</div>
         )}
       </div>
-    </Reveal>
+    </li>
   );
 }
 
-function statusClass(state) {
+function tone(state) {
   if (state === "done") return "done";
   if (state === "error") return "error";
   if (state === "running") return "active";

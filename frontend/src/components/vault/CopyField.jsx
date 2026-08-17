@@ -22,16 +22,16 @@ export default function CopyField({ label, value }) {
   }
 
   return (
-    <div className="readout">
-      <div className="row-between" style={{ marginBottom: "0.4rem" }}>
-        <span className="field-hint">{label}</span>
+    <div className="hash">
+      <div className="hash-top">
+        <span className="label">{label}</span>
 
         <button type="button" className="btn btn-icon" onClick={copy} aria-label={`Copy ${label}`}>
-          {copied ? <Check size={14} color="var(--success)" /> : <Copy size={14} />}
+          {copied ? <Check size={13} color="var(--ok)" /> : <Copy size={13} />}
         </button>
       </div>
 
-      <p className="readout-value">{value}</p>
+      <p className="hash-val">{value}</p>
     </div>
   );
 }
