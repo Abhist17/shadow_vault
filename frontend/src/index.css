@@ -81,6 +81,34 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Blueprint grid. Fixed and masked so it fades out before the fold ends —
+   present enough to give the page a surface, never enough to compete. */
+.backdrop-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(ellipse 90% 55% at 50% 0%, #000 10%, transparent 80%);
+}
+
+/* Soft light tracking the cursor. --cx/--cy are written by Backdrop once per
+   animation frame; with no pointer they stay unset and this sits off-screen. */
+.backdrop-light {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    26rem circle at var(--cx, -100vw) var(--cy, -100vh),
+    rgba(255, 255, 255, 0.055),
+    transparent 65%
+  );
+}
+
 /* Single ambient layer: a fine grain. No gradients, no blobs. */
 body::before {
   content: "";
@@ -155,9 +183,7 @@ a {
 }
 
 .accent { color: var(--accent); }
-.muted { color: var(--fg-muted); }
 .faint { color: var(--fg-faint); }
-.dim { color: var(--fg-faint); }
 
 /* The 11px mono label is the workhorse of the whole system. */
 .label {
@@ -314,6 +340,11 @@ a {
 }
 .btn-primary:not(:disabled):hover { background: #fff; }
 
+/* Arrows lean into the direction of travel on hover. */
+.btn svg { transition: transform 0.25s var(--ease); }
+.btn:not(:disabled):hover svg { transform: translateX(3px); }
+.btn-ghost:not(:disabled):hover svg { transform: translate(2px, -2px); }
+
 .btn-ghost {
   border-color: var(--line-strong);
   color: var(--fg);
@@ -390,22 +421,6 @@ a {
   50% { opacity: 0.25; }
 }
 
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
-  font-family: var(--font-mono);
-  font-size: var(--fs-label);
-  letter-spacing: 0.06em;
-  color: var(--fg-muted);
-  white-space: nowrap;
-  transition: border-color var(--t), color var(--t);
-}
-.chip:hover { border-color: var(--line-strong); color: var(--fg); }
-
 .state {
   display: inline-flex;
   align-items: center;
@@ -420,19 +435,6 @@ a {
 .state-active { color: var(--accent); }
 .state-done { color: var(--ok); }
 .state-error { color: var(--bad); }
-
-.scroll-x { overflow-x: auto; overscroll-behavior-x: contain; }
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
@@ -596,6 +598,19 @@ a {
   transform: translateY(105%);
   animation: word-up 0.9s var(--ease) forwards;
   animation-delay: calc(var(--i) * 70ms);
+  /* A shallow top-to-bottom fade — light falling on the type, not a coloured
+     gradient. It has to live on the word span rather than the h1: the span is
+     transformed, which makes it its own stacking context, and an ancestor's
+     background-clip:text cannot paint into one. */
+  background: linear-gradient(180deg, #ffffff, #b4b7bf);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.word-dim > span {
+  background: none;
+  color: var(--fg-faint);
 }
 
 @keyframes word-up {
@@ -621,10 +636,48 @@ a {
 /* Live readout panel. Replaces the decorative logo — it shows what the product
    actually does, and the scrambling values make the point without a caption. */
 .readout {
+  position: relative;
   border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--bg-raised);
   overflow: hidden;
+}
+
+/* A highlight travelling the border. The conic gradient is masked down to a 1px
+   ring by xor-ing a content-box fill against a full fill, so it is a border and
+   not a glow behind the panel. */
+@property --beam {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.readout::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam),
+    transparent 0deg,
+    rgba(232, 185, 49, 0.75) 22deg,
+    transparent 55deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam 6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes beam {
+  to { --beam: 360deg; }
 }
 
 .readout-top {
@@ -664,9 +717,26 @@ a {
 }
 
 .stat {
+  position: relative;
   background: var(--bg);
   padding: 1.25rem 0 1.25rem 1.25rem;
 }
+
+/* A rule that wipes in from the left on hover. */
+.stat::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.45s var(--ease);
+}
+
+.stat:hover::after { transform: scaleX(1); }
 .stat:first-child { padding-left: 0; }
 
 .stat b {
@@ -709,8 +779,6 @@ a {
   padding: clamp(1.5rem, 1rem + 2vw, 2.5rem) clamp(1.25rem, 1rem + 1.5vw, 2rem);
 }
 
-.compare-col + .compare-col { }
-
 .compare-head {
   display: flex;
   align-items: center;
@@ -739,21 +807,58 @@ a {
    ========================================================================== */
 
 .feature {
+  position: relative;
   padding: clamp(1.5rem, 1rem + 2vw, 2.25rem);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
   min-height: 13rem;
+  overflow: hidden;
   transition: background var(--t);
 }
 .feature:hover { background: var(--bg-raised); }
+
+/* Accent rule wiping across the top edge of the hovered cell. */
+.feature::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.5s var(--ease);
+}
+
+.feature:hover::after { transform: scaleX(1); }
+
+.feature-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: auto;
+}
 
 .feature-num {
   font-family: var(--font-mono);
   font-size: var(--fs-label);
   letter-spacing: 0.14em;
   color: var(--fg-faint);
-  margin-bottom: auto;
+}
+
+/* The arrow slides in from the left as the cell lights up. */
+.feature-arrow {
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+}
+
+.feature:hover .feature-arrow {
+  opacity: 1;
+  transform: none;
 }
 
 .feature p { font-size: var(--fs-small); }
@@ -763,6 +868,70 @@ a {
    ========================================================================== */
 
 /* A table, not cards. Each stage is a row that opens on hover. */
+/* Diagram is desktop-only: at phone widths its labels would render a few
+   pixels tall, and the table below already carries the same information. */
+.pipe { display: none; }
+
+@media (min-width: 52rem) {
+  .pipe {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-bottom: 3.5rem;
+    overflow: visible;
+  }
+}
+
+.pipe-rail {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+/* One long dashoffset animation reads as flow along the rail, no per-frame JS. */
+.pipe-flow {
+  stroke: var(--accent);
+  stroke-width: 1;
+  stroke-dasharray: 3 13;
+  opacity: 0.55;
+  animation: flow 1.6s linear infinite;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -16; }
+}
+
+.pipe-ring {
+  fill: var(--bg);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.pipe-dot { fill: var(--fg-muted); }
+
+.pipe-node:hover .pipe-ring { stroke: var(--accent); }
+.pipe-node:hover .pipe-dot { fill: var(--accent); }
+
+.pipe-name,
+.pipe-tech {
+  text-anchor: middle;
+  font-family: var(--font-display);
+  font-size: 15px;
+  fill: var(--fg);
+  letter-spacing: -0.02em;
+}
+
+.pipe-tech {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--fg-faint);
+  letter-spacing: 0.1em;
+}
+
+.pipe-packet {
+  fill: var(--accent);
+  filter: drop-shadow(0 0 5px rgba(232, 185, 49, 0.9));
+}
+
 .stages { list-style: none; border-top: 1px solid var(--line); }
 
 .stage {

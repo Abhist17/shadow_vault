@@ -102,7 +102,9 @@ export default function Hero() {
         <div className="stats hero-late" style={{ "--d": "0.9s" }}>
           {STATS.map((stat) => (
             <div key={stat.label} className="stat">
-              <b>{stat.value}</b>
+              <b>
+                <Scramble text={stat.value} charset="digits" speed={45} />
+              </b>
               <span>{stat.label}</span>
             </div>
           ))}

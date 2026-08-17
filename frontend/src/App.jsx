@@ -9,11 +9,13 @@ import Features from "./components/home/Features";
 import Protocol from "./components/home/Protocol";
 
 import Dashboard from "./components/vault/Dashboard";
+import Backdrop from "./components/ui/Backdrop";
 import { VaultProvider } from "./context/VaultContext";
 
 export default function App() {
   return (
     <VaultProvider>
+      <Backdrop />
       <Navbar />
 
       <main>

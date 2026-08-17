@@ -1,3 +1,4 @@
+import Pipeline from "./Pipeline";
 import Reveal from "../ui/Reveal";
 import Scramble from "../ui/Scramble";
 
@@ -45,6 +46,10 @@ export default function Protocol() {
         <Reveal className="sec-head">
           <span className="label">[03] — Protocol</span>
           <h2>One lifecycle, five stages.</h2>
+        </Reveal>
+
+        <Reveal>
+          <Pipeline />
         </Reveal>
 
         {/* A table rather than a card grid: five ordered steps are a list, and

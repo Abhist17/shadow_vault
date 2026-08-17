@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-const GLYPHS = "0123456789abcdef";
+const SETS = {
+  hex: "0123456789abcdef",
+  digits: "0123456789",
+};
 
 /**
  * Settles text in by cycling random hex glyphs, locking one character at a time.
@@ -9,7 +12,7 @@ const GLYPHS = "0123456789abcdef";
  * starts as the finished text, so a browser that never runs the effect shows the
  * real value rather than noise.
  */
-export default function Scramble({ text, speed = 28, className = "", trigger = "mount" }) {
+export default function Scramble({ text, speed = 28, className = "", trigger = "mount", charset = "hex" }) {
   const [shown, setShown] = useState(text);
   const [lastText, setLastText] = useState(text);
   const timer = useRef(null);
@@ -42,7 +45,12 @@ export default function Scramble({ text, speed = 28, className = "", trigger = "
           text
             .slice(locked)
             .split("")
-            .map((char) => (char === " " ? " " : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]))
+            .map((char) => {
+              // Structural characters stay put; only the value glyphs churn.
+              if (/[\s<·×/.-]/.test(char)) return char;
+              const pool = SETS[charset] ?? SETS.hex;
+              return pool[Math.floor(Math.random() * pool.length)];
+            })
             .join(""),
       );
 

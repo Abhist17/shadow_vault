@@ -6,7 +6,7 @@ import mark from "../../assets/sv1.jpeg";
 
 const LINKS = [
   { id: "why", label: "Why" },
-  { id: "features", label: "Design" },
+  { id: "features", label: "Guarantees" },
   { id: "flow", label: "Protocol" },
   { id: "vault", label: "Vault" },
 ];

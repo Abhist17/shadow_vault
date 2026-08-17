@@ -1,3 +1,5 @@
+import { ArrowUpRight } from "lucide-react";
+
 import Reveal from "../ui/Reveal";
 
 const FEATURES = [
@@ -38,7 +40,10 @@ export default function Features() {
       <Reveal className="mesh">
         {FEATURES.map((feature, index) => (
           <article key={feature.title} className="feature">
-            <span className="feature-num">{String(index + 1).padStart(2, "0")}</span>
+            <div className="feature-head">
+              <span className="feature-num">{String(index + 1).padStart(2, "0")}</span>
+              <ArrowUpRight size={15} className="feature-arrow" aria-hidden="true" />
+            </div>
             <h3>{feature.title}</h3>
             <p>{feature.text}</p>
           </article>
